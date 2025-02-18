@@ -130,7 +130,7 @@ def findCompletePatterns(mtree: MatchingTree, patternSize: Int): MatchingTree =
     .filterKeys { case messageIdxs =>
       messageIdxs.size == patternSize
     }
-    .filter { case (_, patternBins) =>
+    .filter { (_, patternBins) =>
       patternBins.forall((patShapeSize, msgIdxs) => patShapeSize.size == msgIdxs.size)
     }
     .to(TreeMap)

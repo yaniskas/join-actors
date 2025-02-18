@@ -12,8 +12,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.util.*
 
-type Ponger = ActorRef[Ping | Done]
-type Pinger = ActorRef[Pong | Done]
+type Ponger = ActorRef[PingPong, Int]
+type Pinger = ActorRef[PingPong, Int]
 
 sealed trait PingPong
 case class Ping(ref: Pinger, hits: Int) extends PingPong

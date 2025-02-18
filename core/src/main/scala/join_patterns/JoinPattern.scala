@@ -27,7 +27,7 @@ object PatternFits:
 case class JoinPattern[M, T](
     extract: Messages[M] => Option[PatternBins],
     guard: LookupEnv => Boolean,
-    rhs: (LookupEnv, ActorRef[M]) => T,
+    rhs: (LookupEnv, ActorRef[M, ?]) => T,
     size: Int,
     updateMTree: (
         Tuple2[M, Int],

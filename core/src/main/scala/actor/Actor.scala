@@ -9,6 +9,8 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.Promise
 import scala.util.*
+import scala.jdk.CollectionConverters.*
+import java.util.stream.{Collectors, Stream}
 
 implicit val ec: ExecutionContext =
   ExecutionContext.fromExecutorService(
@@ -31,9 +33,9 @@ import Result.*
   * @tparam T
   *   The type of result produced by the actor. Which is the right-hand side of the join pattern.
   */
-class Actor[M, T](private val matcher: Matcher[M, Result[T]]):
-  private val mailbox: Mailbox[M] = Mailbox[M]
-  private val self                = ActorRef(mailbox)
+class Actor[M, T](private var matcher: Matcher[M, Result[T]]):
+  private var mailbox: Mailbox[M] = Mailbox[M]
+  private val ref                = ActorRef(this)
 
   /** Starts the actor and returns a future that will be completed with the result produced by the
     * actor, and the actor reference.
@@ -41,12 +43,12 @@ class Actor[M, T](private val matcher: Matcher[M, Result[T]]):
     * @return
     *   A tuple containing the future result and the actor reference.
     */
-  def start(): (Future[T], ActorRef[M]) =
+  def start(): (Future[T], ActorRef[M, T]) =
     val promise = Promise[T]
 
     ec.execute(() => run(promise))
 
-    (promise.future, self)
+    (promise.future, ref)
 
   /** Runs the actor's message processing loop recursively until a stop signal is received, and
     * completes the provided promise with the resulting value.
@@ -56,6 +58,22 @@ class Actor[M, T](private val matcher: Matcher[M, Result[T]]):
     */
   @tailrec
   private def run(promise: Promise[T]): Unit =
-    matcher(mailbox)(self) match
+    matcher(mailbox)(ref) match
       case Continue    => run(promise)
       case Stop(value) => promise.success(value)
+
+  def receive(msg: M): Unit =
+    mailbox.put(msg)
+
+  def switchMatcher(newMatcher: Matcher[M, Result[T]]): Result[T] =
+    val extractedMessages = this.matcher.extractedMessages
+
+    val newMailbox = Stream.concat(
+      extractedMessages.iterator.toList.asJava.stream(),
+      mailbox.stream()
+    ).collect(Collectors.toCollection{ () => Mailbox[M] })
+
+    this.matcher = newMatcher
+    this.mailbox = newMailbox
+
+    matcher(mailbox)(ref)

@@ -1,6 +1,6 @@
 package join_patterns
 
-import actor.ActorRef
+import actor.{ActorRef, Result}
 
 import java.util.concurrent.LinkedTransferQueue as Mailbox
 import java.util.concurrent.TimeUnit
@@ -8,7 +8,7 @@ import scala.Console
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.ArrayBuffer
 
-type RHSFnClosure[M, T] = (LookupEnv, ActorRef[M]) => T
+type RHSFnClosure[M, T] = (LookupEnv, ActorRef[M, T]) => T
 
 /** Type alias representing the sub-sequence of message indices and the matched pattern indices.
   *
@@ -90,7 +90,9 @@ trait Matcher[M, T]:
     * @return
     *   The result of the join pattern.
     */
-  def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T
+  def apply(q: Mailbox[M])(selfRef: ActorRef[M, ?]): T
+
+  def extractedMessages: IterableOnce[M]
 
   def crossProduct[A](
       listOfLists: LazyList[LazyList[A]]

@@ -13,6 +13,8 @@ class BruteForceMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) ext
   private val messages         = ArrayBuffer[M]()
   private val patternsWithIdxs = patterns.zipWithIndex
 
+  def extractedMessages: IterableOnce[M] = messages
+
   // val filename0 = "brute_force_matcher_size_0_random_msgs_3_valid_msgs.csv"
   // val filename3 = "brute_force_matcher_size_3_random_msgs_3_valid_msgs.csv"
   // val filename6 = "brute_force_matcher_size_6_random_msgs_3_valid_msgs.csv"
@@ -25,7 +27,7 @@ class BruteForceMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) ext
 
   private var msgCounter = 0
 
-  def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T =
+  def apply(q: Mailbox[M])(selfRef: ActorRef[M, ?]): T =
     var result: Option[T] = None
 
     if messages.isEmpty then messages.append(q.take())
@@ -59,7 +61,7 @@ class BruteForceMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) ext
                       val selectedMatch =
                         (
                           bestMatchSubsts,
-                          (substs: LookupEnv, self: ActorRef[M]) => pattern.rhs(substs, self)
+                          (substs: LookupEnv, self: ActorRef[M, T]) => pattern.rhs(substs, self)
                         )
                       candidateMatchesAcc.updated((bestMatchIdxs, patternIdx), selectedMatch)
                     case None => candidateMatchesAcc

@@ -26,7 +26,7 @@ def printerSpoolerExample(algorithm: MatchingAlgorithm, nPrinters: Int, nJobs: I
   import PrinterSpoolerMessage.*
   import PrinterAuth.*
   val printer: Actor[SpoolerMsgs, Unit] = Actor[SpoolerMsgs, Unit] {
-    receive { (self: ActorRef[SpoolerMsgs]) =>
+    receive { (self: ActorRef[SpoolerMsgs, Unit]) =>
       {
         case (Auth(cid1), Ready(printerId1), Job(jobId, cid2, printerId2))
             if printerId1 == printerId2 && cid1 == cid2 =>

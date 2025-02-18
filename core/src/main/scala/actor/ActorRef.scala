@@ -1,6 +1,7 @@
 package actor
 
 import java.util.concurrent.LinkedTransferQueue
+import join_patterns.Matcher
 
 /** Represents a reference to an actor.
   *
@@ -10,13 +11,13 @@ import java.util.concurrent.LinkedTransferQueue
   * @tparam M
   *   The type of messages that can be sent to the actor.
   */
-class ActorRef[-M](q: LinkedTransferQueue[M]):
+class ActorRef[M, T](actor: Actor[M, T]):
   /** Sends a message to the actor.
     *
     * @param m
     *   The message to be sent.
     */
-  def send(m: M): Unit = q.put(m)
+  def send(m: M): Unit = actor.receive(m)
 
   /** Sends a message to the actor using the `!` operator.
     *
@@ -24,3 +25,5 @@ class ActorRef[-M](q: LinkedTransferQueue[M]):
     *   The message to be sent.
     */
   def !(m: M): Unit = send(m)
+
+  export actor.switchMatcher

@@ -27,8 +27,8 @@ enum ChameneoColor:
       case (Red, Red)       => Red
       case (Yellow, Yellow) => Yellow
 
-type ChameneoRef  = ActorRef[ChameneosMsg]
-type MeetingPlace = ActorRef[ChameneosMsg]
+type ChameneoRef  = ActorRef[ChameneosMsg, Unit]
+type MeetingPlace = ActorRef[ChameneosMsg, Int]
 
 enum ChameneosMsg:
   case Start()

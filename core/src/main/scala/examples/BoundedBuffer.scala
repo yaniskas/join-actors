@@ -37,7 +37,7 @@ type ProducerSyncReply = Promise[Unit]
 
 type BBEvent = BoundedBuffer | InternalEvent | ConsumerReply | Terminate
 
-type BBRef = ActorRef[BBEvent]
+type BBRef = ActorRef[BBEvent, Long]
 
 case class BBConfig(
     val bufferBound: Int,

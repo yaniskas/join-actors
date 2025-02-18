@@ -16,6 +16,8 @@ class StatefulTreeMatcher[M, T](private val patterns: List[JoinPattern[M, T]])
   private val messages         = ArrayBuffer[(M, Int)]()
   private val patternsWithIdxs = patterns.zipWithIndex
 
+  def extractedMessages: IterableOnce[M] = messages.iterator.map { (m, i) => m }
+
   // Init patterns with empty MatchingTree and maintain across apply() calls
   private var patternsWithMatchingTrees: List[PatternState[M, T]] = patternsWithIdxs
     .map { case p @ (pattern, _) =>
@@ -62,7 +64,7 @@ class StatefulTreeMatcher[M, T](private val patterns: List[JoinPattern[M, T]])
             val selectedMatch =
               (
                 bestMatchSubsts,
-                (substs: LookupEnv, self: ActorRef[M]) => pattern.rhs(substs, self)
+                (substs: LookupEnv, self: ActorRef[M, T]) => pattern.rhs(substs, self)
               )
 
             val removedNonMatchingNodes =
@@ -95,7 +97,7 @@ class StatefulTreeMatcher[M, T](private val patterns: List[JoinPattern[M, T]])
   // appendToFile(filename0, logs.head + "\n" + "0,0\n")
 
   private var mQidx = -1
-  def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T =
+  def apply(q: Mailbox[M])(selfRef: ActorRef[M, T]): T =
     import scala.jdk.CollectionConverters.*
 
     var result: Option[T] = None

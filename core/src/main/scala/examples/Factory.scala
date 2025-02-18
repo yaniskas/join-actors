@@ -29,7 +29,7 @@ type Event = MachineEvent | WorkerEvent | SystemEvent
 def monitor() = Actor[Event, Unit] {
   import MachineEvent.*, WorkerEvent.*, SystemEvent.*
 
-  receive { (self: ActorRef[Event]) =>
+  receive { (self: ActorRef[Event, Unit]) =>
     // A machine sends a maintenance request, a worker takes it, fixes it, but
     // the same machine sends a new maintenance request in less than 30 min
     {

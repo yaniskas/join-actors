@@ -33,7 +33,7 @@ import SystemEvent.*
 
 def monitor(algorithm: MatchingAlgorithm) =
   Actor[Event, Unit] {
-    receive { (self: ActorRef[Event]) =>
+    receive { (self: ActorRef[Event, Unit]) =>
       {
         case (Fault(fid1, ts1), Fix(fid2, ts2)) if fid1 == fid2 =>
           println(

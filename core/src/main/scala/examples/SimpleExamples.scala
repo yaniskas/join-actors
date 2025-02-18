@@ -24,7 +24,7 @@ def example00(algorithm: MatchingAlgorithm): Unit =
   println(s"Using ${algorithm}\n\n")
 
   val actor = Actor[Msg, Unit](
-    receive { (_: ActorRef[Msg]) =>
+    receive { (_: ActorRef[Msg, Unit]) =>
       {
         case A() &&& B() &&& C() =>
           println(s"I've received 3 messages: A, B and C :)")
@@ -57,7 +57,7 @@ def example00(algorithm: MatchingAlgorithm): Unit =
 def example01(algorithm: MatchingAlgorithm): Unit =
   println(s"Using ${algorithm}\n\n")
 
-  val actor = Actor[Msg, Unit](receive { (_: ActorRef[Msg]) =>
+  val actor = Actor[Msg, Unit](receive { (_: ActorRef[Msg, Unit]) =>
     {
       case (D(x), E(y), F(z)) =>
         Stop(println(s"Case 00: x = $x, y = $y, z = $z"))
@@ -90,7 +90,7 @@ def example02(algorithm: MatchingAlgorithm): Unit =
   val q = List.fill(9)(A())
 
   val actor = Actor[Msg, Unit](
-    receive { (_: ActorRef[Msg]) =>
+    receive { (_: ActorRef[Msg, Unit]) =>
       { case (A(), A(), A(), A(), A(), A(), A(), A(), A()) => Stop(println("Match!")) }
     }(algorithm)
   )
@@ -113,7 +113,7 @@ def example03(algorithm: MatchingAlgorithm): Unit =
   val q = List[Msg](E(2), F(2), E(42))
 
   val actor = Actor[Msg, Int](
-    receive { (_: ActorRef[Msg]) =>
+    receive { (_: ActorRef[Msg, Int]) =>
       {
         case (E(m), E(n)) if n == 2 && m == 42 =>
           { val z = "hi"; println(z) }; Stop(n + 1)
@@ -141,7 +141,7 @@ def example04(algorithm: MatchingAlgorithm): Unit =
   val isZero: Int => Boolean = (n: Int) => n == 0
 
   val actor = Actor[Msg, Unit] {
-    receive { (_: ActorRef[Msg]) =>
+    receive { (_: ActorRef[Msg, Unit]) =>
       { case (E(m), F(n), E(o)) => Stop(println(s"E(m = $m), F(n = $n), E(o = $o)")) }
     }(algorithm)
   }
@@ -163,7 +163,7 @@ def example05(algorithm: MatchingAlgorithm): Unit =
   println(s"Using ${algorithm}\n\n")
 
   val actor = Actor[Msg, String] {
-    receive { (_: ActorRef[Msg]) =>
+    receive { (_: ActorRef[Msg, String]) =>
       {
         case (
               E(a),
@@ -200,7 +200,7 @@ def example06(algorithm: MatchingAlgorithm): Unit =
   println(s"Using ${algorithm}\n\n")
   val expected = 42
   val actor = Actor[Msg, Int] {
-    receive { (self: ActorRef[Msg]) =>
+    receive { (self: ActorRef[Msg, Int]) =>
       {
         case (F(i0), E(i1)) if i0 == i1 =>
           Stop(expected)
@@ -238,7 +238,7 @@ def example06(algorithm: MatchingAlgorithm): Unit =
 def example07(algorithm: MatchingAlgorithm): Unit =
   println(s"Using ${algorithm}\n\n")
   val expected = 42
-  val matcher: Matcher[Msg, Result[Int]] = receive { (_: ActorRef[Msg]) =>
+  val matcher: Matcher[Msg, Result[Int]] = receive { (_: ActorRef[Msg, Int]) =>
     {
       case (F(i0), E(i1), F(i2)) if i0 == i1 && i1 == i2 =>
         Stop(expected)
@@ -265,7 +265,7 @@ def example08(algorithm: MatchingAlgorithm): Unit =
   val q = List[Msg](E(1), E(2), E(3), E(4), E(5), E(6), E(7), E(8), E(9), E(10), E(11), E(12))
 
   val actor = Actor[Msg, Int] {
-    receive { (_: ActorRef[Msg]) =>
+    receive { (_: ActorRef[Msg, Int]) =>
       {
         case (E(a), E(b), E(c)) if a == 3 && b == 2 && c == 1    => Continue
         case (E(a), E(b), E(c)) if a == 6 && b == 5 && c == 4    => Continue
@@ -289,7 +289,7 @@ def exampleWithRandomMsgs(algorithm: MatchingAlgorithm): Unit =
   println(s"Using ${algorithm}\n\n")
 
   val actor = Actor[Msg, Unit] {
-    receive { (_: ActorRef[Msg]) =>
+    receive { (_: ActorRef[Msg, Unit]) =>
       {
         case (A(), B(), C()) => Stop(println(s"I've received 3 messages: A, B and C :)"))
         case (D(n), E(m), F(o)) if n < m && m < o =>

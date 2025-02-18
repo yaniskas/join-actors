@@ -26,4 +26,4 @@ class ActorRef[M, T](actor: Actor[M, T]):
     */
   def !(m: M): Unit = send(m)
 
-  export actor.switchMatcher
+  export actor.requestMatcherSwitch

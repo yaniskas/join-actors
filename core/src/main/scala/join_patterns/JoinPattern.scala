@@ -1,6 +1,6 @@
 package join_patterns
 
-import actor.ActorRef
+import actor.{ActorRef, Result}
 
 import math.Ordering.Implicits.infixOrderingOps
 import math.Ordering.Implicits.seqOrdering
@@ -27,7 +27,7 @@ object PatternFits:
 case class JoinPattern[M, T](
     extract: Messages[M] => Option[PatternBins],
     guard: LookupEnv => Boolean,
-    rhs: (LookupEnv, ActorRef[M, ?]) => T,
+    rhs: (LookupEnv, ActorRef[M, T]) => Result[T],
     size: Int,
     updateMTree: (
         Tuple2[M, Int],

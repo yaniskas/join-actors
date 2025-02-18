@@ -205,7 +205,7 @@ private def generateRhs[M, T](using
             TypeRepr.of[LookupEnv],
             TypeRepr.of[ActorRef[M, T]]
           ), // rhsFn takes 2 params: LookupEnv and ActorRef[M, T]
-        _ => TypeRepr.of[T]
+        _ => TypeRepr.of[Result[T]]
       ),
       rhsFn = (sym: Symbol, params: List[Tree]) =>
         val lookupEnv   = params.head.asInstanceOf[Ident]
@@ -291,8 +291,8 @@ private def generateUnaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T]
         }
       val predicate: Expr[LookupEnv => Boolean] =
         generateGuard(guard, inners).asExprOf[LookupEnv => Boolean]
-      val rhs: Expr[(LookupEnv, ActorRef[M, T]) => T] =
-        generateRhs[M, T](_rhs, inners, selfRef).asExprOf[(LookupEnv, ActorRef[M, T]) => T]
+      val rhs: Expr[(LookupEnv, ActorRef[M, T]) => Result[T]] =
+        generateRhs[M, T](_rhs, inners, selfRef).asExprOf[(LookupEnv, ActorRef[M, T]) => Result[T]]
       val size = 1
 
       val updatedMTree = '{ (m: Tuple2[M, Int], pState: MatchingTree) =>
@@ -310,7 +310,7 @@ private def generateUnaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T]
         JoinPattern(
           $extract,
           $predicate,
-          $rhs.asInstanceOf[(join_patterns.LookupEnv, actor.ActorRef[M, ?]) => T],
+          $rhs.asInstanceOf[(join_patterns.LookupEnv, actor.ActorRef[M, T]) => Result[T]],
           ${ Expr(size) },
           $updatedMTree,
           ${ patternInfo }
@@ -427,8 +427,8 @@ private def generateNaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T])
 
   val predicate: Expr[LookupEnv => Boolean] =
     generateGuard(guard, inners).asExprOf[LookupEnv => Boolean]
-  val rhs: Expr[(LookupEnv, ActorRef[M, T]) => T] =
-    generateRhs[M, T](_rhs, inners, self).asExprOf[(LookupEnv, ActorRef[M, T]) => T]
+  val rhs: Expr[(LookupEnv, ActorRef[M, T]) => Result[T]] =
+    generateRhs[M, T](_rhs, inners, self).asExprOf[(LookupEnv, ActorRef[M, T]) => Result[T]]
   val size = outers.size
 
   val updatedMTree: Expr[
@@ -462,7 +462,7 @@ private def generateNaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T])
     JoinPattern(
       $extract,
       $predicate,
-      $rhs.asInstanceOf[(join_patterns.LookupEnv, actor.ActorRef[M, ?]) => T],
+      $rhs.asInstanceOf[(join_patterns.LookupEnv, actor.ActorRef[M, T]) => Result[T]],
       ${ Expr(size) },
       $updatedMTree,
       ${ patternInfo }
@@ -497,8 +497,8 @@ private def generateWildcardPattern[M, T](using
   }
   val predicate: Expr[LookupEnv => Boolean] =
     generateGuard(guard, List()).asExprOf[LookupEnv => Boolean]
-  val rhs: Expr[(LookupEnv, ActorRef[M, T]) => T] = '{ (_: LookupEnv, _: ActorRef[M, T]) =>
-    ${ _rhs.asExprOf[T] }
+  val rhs: Expr[(LookupEnv, ActorRef[M, T]) => Result[T]] = '{ (_: LookupEnv, _: ActorRef[M, T]) =>
+    ${ _rhs.asExprOf[Result[T]] }
   }
   val size = 1
 
@@ -517,7 +517,7 @@ private def generateWildcardPattern[M, T](using
     JoinPattern(
       $extract,
       $predicate,
-      $rhs.asInstanceOf[(join_patterns.LookupEnv, actor.ActorRef[M, ?]) => T],
+      $rhs.asInstanceOf[(join_patterns.LookupEnv, actor.ActorRef[M, T]) => Result[T]],
       ${ Expr(size) },
       $updatedMTree,
       ${ patternInfo }
@@ -587,7 +587,7 @@ private def generateJoinPattern[M, T](using quotes: Quotes, tm: Type[M], tt: Typ
   *   a list of join pattern expressions.
   */
 private def getJoinDefinition[M, T](
-    expr: Expr[ActorRef[M, ?] => PartialFunction[Any, T]]
+    expr: Expr[ActorRef[M, T] => PartialFunction[Any, Result[T]]]
 )(using quotes: Quotes, tm: Type[M], tt: Type[T]): List[Expr[JoinPattern[M, T]]] =
   import quotes.reflect.*
   expr.asTerm match
@@ -619,16 +619,16 @@ private def receiveCodegen[M, T](
     tm: Type[M],
     tt: Type[T],
     quotes: Quotes
-): Expr[MatchingAlgorithm => Matcher[M, Result[T]]] =
+): Expr[MatchingAlgorithm => Matcher[M, T]] =
   import quotes.reflect.*
 
   '{ (algorithm: MatchingAlgorithm) =>
-    SelectMatcher[M, Result[T]](
+    SelectMatcher[M, T](
       algorithm,
       ${
         Expr.ofList(
           getJoinDefinition(
-            expr.asInstanceOf[Expr[ActorRef[M, ?] => PartialFunction[Any, Result[T]]]]
+            expr.asInstanceOf[Expr[ActorRef[M, T] => PartialFunction[Any, Result[T]]]]
           )
         )
       }
@@ -645,5 +645,5 @@ private def receiveCodegen[M, T](
   */
 inline def receive[M, T](
     inline f: (ActorRef[M, T] => PartialFunction[Any, Result[T]])
-): MatchingAlgorithm => Matcher[M, Result[T]] =
+): MatchingAlgorithm => Matcher[M, T] =
   ${ receiveCodegen('f) }

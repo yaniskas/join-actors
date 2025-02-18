@@ -64,7 +64,7 @@ def smartHouseExample(algorithm: MatchingAlgorithm) =
     ) && mRoom0 == "entrance_hall" && cRoom == "front_door" && mRoom1 == "front_door"
 
   Actor[Action, (Long, Int)] {
-    receive { (selfRef: ActorRef[Action]) =>
+    receive { (selfRef: ActorRef[Action, (Long, Int)]) =>
       // E1. Turn on the lights of the bathroom if someone enters in it, and its ambient light is less than 40 lux.
       {
         case (

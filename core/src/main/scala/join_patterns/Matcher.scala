@@ -8,7 +8,7 @@ import scala.Console
 import scala.collection.immutable.TreeMap
 import scala.collection.mutable.ArrayBuffer
 
-type RHSFnClosure[M, T] = (LookupEnv, ActorRef[M, T]) => T
+type RHSFnClosure[M, T] = (LookupEnv, ActorRef[M, T]) => Result[T]
 
 /** Type alias representing the sub-sequence of message indices and the matched pattern indices.
   *
@@ -90,7 +90,7 @@ trait Matcher[M, T]:
     * @return
     *   The result of the join pattern.
     */
-  def apply(q: Mailbox[M])(selfRef: ActorRef[M, ?]): T
+  def apply(q: Mailbox[M])(selfRef: ActorRef[M, T]): Result[T]
 
   def extractedMessages: IterableOnce[M]
 

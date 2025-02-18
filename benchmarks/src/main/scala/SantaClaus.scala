@@ -13,9 +13,9 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
-type SantaClausRef = ActorRef[NeedHelp | IsBack | Rest]
-type ReindeerRef   = ActorRef[CanLeave | Rest]
-type ElfRef        = ActorRef[Helped | Rest]
+type SantaClausRef = ActorRef[SAction, (Long, Int)]
+type ReindeerRef   = ActorRef[SAction, (Long, Int)]
+type ElfRef        = ActorRef[SAction, (Long, Int)]
 
 sealed trait SAction
 case class IsBack(reindeerRef: ReindeerRef)  extends SAction

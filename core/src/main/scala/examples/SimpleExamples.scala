@@ -238,7 +238,7 @@ def example06(algorithm: MatchingAlgorithm): Unit =
 def example07(algorithm: MatchingAlgorithm): Unit =
   println(s"Using ${algorithm}\n\n")
   val expected = 42
-  val matcher: Matcher[Msg, Result[Int]] = receive { (_: ActorRef[Msg, Int]) =>
+  val matcher: Matcher[Msg, Int] = receive[Msg, Int] { (_: ActorRef[Msg, Int]) =>
     {
       case (F(i0), E(i1), F(i2)) if i0 == i1 && i1 == i2 =>
         Stop(expected)
@@ -315,6 +315,55 @@ def exampleWithRandomMsgs(algorithm: MatchingAlgorithm): Unit =
 
   // println(s"Q =  ${q.zipWithIndex}")
 
+  val result = Await.ready(futureResult, Duration(1, "minutes"))
+  result.onComplete(printResult)
+
+  println("\n======================================================\n\n")
+
+def exampleSwitch(algorithm: MatchingAlgorithm): Unit =
+  println(s"Using ${algorithm}\n\n")
+
+  val m1 = RefCell[() => Matcher[Msg, Unit]]()
+  val m2 = RefCell[() => Matcher[Msg, Unit]]()
+  m1.content =
+    () => receive[Msg, Unit] { (ref: ActorRef[Msg, Unit]) =>
+    {
+      case A() =>
+        println(s"I've received A, switching to m2")
+        ref.requestMatcherSwitch(m2.content())
+        Continue
+      case B() =>
+        println("This should not be reached")
+        Stop(())
+      case C() =>
+        println("This should not be reached")
+        Stop(())
+      case D(x) => 
+        print("Received D, stopping")
+        Stop(())
+    }
+    }(algorithm)
+  m2.content =
+    () => receive[Msg, Unit] { (ref: ActorRef[Msg, Unit]) =>
+    {
+      case B() &&& C() =>
+        println(s"I've received B and C, switching back to m1")
+        ref.requestMatcherSwitch(m1.content())
+        Continue
+      case D(x) =>
+        print("This should not be reached")
+        Stop(())
+    }
+    }(algorithm)
+
+  val actor = Actor[Msg, Unit](m1.content())
+  val (futureResult, actorRef) = actor.start()
+
+  val q = List(A(), B(), C(), D(1))
+
+  q.foreach(actorRef ! _)
+
+  println(s"Q = ${q.zipWithIndex}")
   val result = Await.ready(futureResult, Duration(1, "minutes"))
   result.onComplete(printResult)
 

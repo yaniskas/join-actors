@@ -1,6 +1,6 @@
 package join_patterns
 
-import actor.ActorRef
+import actor.{ActorRef, Result}
 import os.*
 
 import java.util.concurrent.LinkedTransferQueue as Mailbox
@@ -97,10 +97,10 @@ class StatefulTreeMatcher[M, T](private val patterns: List[JoinPattern[M, T]])
   // appendToFile(filename0, logs.head + "\n" + "0,0\n")
 
   private var mQidx = -1
-  def apply(q: Mailbox[M])(selfRef: ActorRef[M, T]): T =
+  def apply(q: Mailbox[M])(selfRef: ActorRef[M, T]): Result[T] =
     import scala.jdk.CollectionConverters.*
 
-    var result: Option[T] = None
+    var result: Option[Result[T]] = None
     var mQ                = q.take()
     mQidx += 1
     messages.append((mQ, mQidx))
@@ -127,6 +127,11 @@ class StatefulTreeMatcher[M, T](private val patterns: List[JoinPattern[M, T]])
       if candidateMatches.nonEmpty then
         val ((candidateQidxs, patIdx), (substs, rhsFn)) = candidateMatches.head
         result = Some(rhsFn(substs, selfRef))
+
+        // Removed matched messages from the messages field
+        candidateQidxs.foreach { matchedIndex =>
+          messages.filterInPlace { (_msg, i) => i == matchedIndex }
+        }
 
         // Prune tree
         patternsWithMatchingTrees = patternsWithMatchingTrees.map {

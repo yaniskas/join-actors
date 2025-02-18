@@ -1,6 +1,6 @@
 package join_patterns
 
-import actor.ActorRef
+import actor.{ActorRef, Result}
 
 import java.util.concurrent.LinkedTransferQueue as Mailbox
 import scala.collection.mutable.ArrayBuffer
@@ -27,8 +27,8 @@ class BruteForceMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) ext
 
   private var msgCounter = 0
 
-  def apply(q: Mailbox[M])(selfRef: ActorRef[M, ?]): T =
-    var result: Option[T] = None
+  def apply(q: Mailbox[M])(selfRef: ActorRef[M, T]): Result[T] =
+    var result: Option[Result[T]] = None
 
     if messages.isEmpty then messages.append(q.take())
     // msgCounter += 1

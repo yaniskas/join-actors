@@ -40,7 +40,7 @@ def simpleSmartHouseExample(algorithm: MatchingAlgorithm, withHeavyGuard: Boolea
       isSorted(times) && rooms.forall(_ == "bathroom") && mStatus && !lStatus && value <= 40
 
   Actor[Action, (Long, Int)] {
-    receive { (selfRef: ActorRef[Action]) =>
+    receive { (selfRef: ActorRef[Action, (Long, Int)]) =>
       // E1. Turn on the lights of the bathroom if someone enters in it, and its ambient light is less than 40 lux.
       {
         case (

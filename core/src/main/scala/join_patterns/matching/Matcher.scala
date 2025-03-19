@@ -11,6 +11,8 @@ import join_patterns.types.*
 import java.util.concurrent.LinkedTransferQueue as Mailbox
 import scala.Console
 import scala.collection.immutable.{ArraySeq, TreeMap}
+import join_patterns.util.GrowingIntArrayRef
+import scala.collection.mutable.ArrayBufferView
 
 type RHSFnClosure[M, T] = (LookupEnv, ActorRef[M]) => T
 
@@ -49,11 +51,15 @@ type CandidateMatches[M, T] =
 
 object CandidateMatches:
   import math.Ordering.Implicits.seqOrdering
-  private val defaultSeqOrderingForMessageIdxs = seqOrdering[ArraySeq, Int]
+  private val defaultSeqOrderingForMessageIdxs = seqOrdering[Seq, Int]
+
+  private val something = new Ordering[MessageIdxs]:
+    def compare(x: MessageIdxs, y: MessageIdxs): Int =
+      seqOrdering.compare(x, y)
 
   def apply[M, T](): CandidateMatches[M, T] =
     TreeMap[MatchIdxs, (LookupEnv, RHSFnClosure[M, T])]()(
-      Ordering.Tuple2[MessageIdxs, PatternIdx](using defaultSeqOrderingForMessageIdxs)
+      Ordering.Tuple2[MessageIdxs, PatternIdx](using something)
     )
 
   def logCandidateMatches[M, T](candidateMatches: CandidateMatches[M, T]) =

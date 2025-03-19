@@ -11,7 +11,9 @@ import scala.collection.mutable.{ArrayBuffer, Map as MutableMap, TreeMap as Muta
 import scala.util.boundary
 import scala.util.boundary.break
 
-class WhileLazyMatchingTree[M, T](private val pattern: JoinPattern[M, T], private val patternIdx: Int):
+class WhileLazyMatchingTree[M, T](private val pattern: JoinPattern[M, T], patternIdxUnboxed: Int):
+  private case class Holder[E](i: E)
+  private val patternIdx = Holder(patternIdxUnboxed)
   private val patternExtractors = pattern.getPatternInfo.patternExtractors
 //  private val msgTypeCheckers = patternExtractors.map{ case (key, (typeChecker, _)) => (key, typeChecker) }
 
@@ -67,7 +69,7 @@ class WhileLazyMatchingTree[M, T](private val pattern: JoinPattern[M, T], privat
                     (substs: LookupEnv, self: ActorRef[M]) => pattern.rhs(substs, self)
             )
 
-          Some((bestMatchIdxs, patternIdx), selectedMatch)
+          Some((bestMatchIdxs, patternIdx.i), selectedMatch)
         case None =>
           // We only add nodes to the tree if no match was found
           nodes.addAll(additions)

@@ -2,6 +2,7 @@ package join_patterns.types
 
 import join_actors.actor.ActorRef
 import join_patterns.matching.immutable.MatchingTree
+import join_patterns.util.GrowingIntArrayRef
 
 import scala.annotation.targetName
 import scala.collection.Factory
@@ -10,16 +11,16 @@ import scala.collection.mutable.Builder
 
 type MessageIdx  = Int
 
-type MessageIdxs = ArraySeq[MessageIdx]
+type MessageIdxs = GrowingIntArrayRef
 
 object MessageIdxs extends Factory[MessageIdx, MessageIdxs]:
-  def apply(elems: MessageIdx*): MessageIdxs = ArraySeq(elems*)
+  def apply(elems: MessageIdx*): MessageIdxs = GrowingIntArrayRef(elems*)
 
   def fromSpecific(it: IterableOnce[MessageIdx]): MessageIdxs =
-    it.iterator.to(ArraySeq)
+    it.iterator.to(GrowingIntArrayRef)
 
   def newBuilder: Builder[MessageIdx, MessageIdxs] =
-    ArraySeq.newBuilder[MessageIdx]
+    GrowingIntArrayRef.newBuilder
 
 
 type PatternIdx  = Int
@@ -43,6 +44,20 @@ given sizeBiasedOrdering: Ordering[ArraySeq[PatternIdx]] with
     else
       var acc = 0
       var i   = 0
+      while i < x.size && i < y.size && acc == 0 do
+        val a = x(i)
+        val b = y(i)
+        if a != b then acc = Integer.compare(a, b)
+        i += 1
+      acc
+
+given sizeBiasedOrdering2: Ordering[GrowingIntArrayRef] with
+  def compare(x: GrowingIntArrayRef, y: GrowingIntArrayRef): Int =
+    val sizeComp = Integer.compare(x.length, y.length) // compare by size first
+    if sizeComp != 0 then -sizeComp // if sizes are different, return the comparison result
+    else
+      var acc = 0
+      var i = 0
       while i < x.size && i < y.size && acc == 0 do
         val a = x(i)
         val b = y(i)

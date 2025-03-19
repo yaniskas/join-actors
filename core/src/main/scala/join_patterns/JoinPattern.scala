@@ -5,7 +5,7 @@ import join_patterns.matching.immutable.MatchingTree
 
 import scala.annotation.targetName
 import scala.collection.Factory
-import scala.collection.immutable.{ArraySeq, TreeMap}
+import scala.collection.immutable.{ArraySeq, HashMap}
 import scala.collection.mutable.Builder
 
 type MessageIdx  = Int
@@ -55,10 +55,10 @@ given sizeBiasedOrdering: Ordering[ArraySeq[PatternIdx]] with
  * If a constructor appears once, then the map key is a list with one index. If the same constructor appears multiple
  * times, the key is a list of multiple indices.
  */
-type PatternBins = TreeMap[PatternIdxs, MessageIdxs]
+type PatternBins = HashMap[PatternIdxs, MessageIdxs]
 object PatternBins:
   def apply(elems: (PatternIdxs, MessageIdxs)*): PatternBins =
-    TreeMap[PatternIdxs, MessageIdxs](elems*)
+    HashMap[PatternIdxs, MessageIdxs](elems*)
 
 def ppPatternBins(patternBins: PatternBins): String =
   patternBins

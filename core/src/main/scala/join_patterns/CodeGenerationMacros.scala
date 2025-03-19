@@ -264,7 +264,7 @@ private def generateUnaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T]
     val extractField = _extractors.head._2
 
     PatternInfo(
-      patternBins = MTree(PatternIdxs(0) -> MessageIdxs()),
+      patternBins = PatternBins(PatternIdxs(0) -> MessageIdxs()),
       patternExtractors = PatternExtractors(0 -> (checkMsgType, extractField))
     )
   }
@@ -284,7 +284,7 @@ private def generateUnaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T]
         val (mQ, mQidx)        = m // Take the newest msg from the queue
         val mTree              = pState
         val mIdxs              = MessageIdxs(mQidx)
-        if checkMsgType(mQ) then Some(mTree.updated(mIdxs, MTree(PatternIdxs(0) -> mIdxs)))
+        if checkMsgType(mQ) then Some(mTree.updated(mIdxs, PatternBins(PatternIdxs(0) -> mIdxs)))
         else Some(mTree)
       }
 
@@ -357,7 +357,7 @@ private def generateNaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T])
           indices.iterator.to(PatternIdxs) -> MessageIdxs()
         }
 
-    PatternInfo(patternBins = patBins.to(MTree), patternExtractors = $patExtractors)
+    PatternInfo(patternBins = patBins.to(HashMap), patternExtractors = $patExtractors)
   }
 
   val predicate: Expr[LookupEnv => Boolean] =
@@ -438,7 +438,7 @@ private def generateWildcardPattern[M, T](using
 
   val patternInfo: Expr[PatternInfo[M]] = '{
     PatternInfo(
-      patternBins = MTree(),
+      patternBins = PatternBins(),
       patternExtractors = Map()
     )
   }

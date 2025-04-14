@@ -50,8 +50,8 @@ class SimpleSmartHouse(private val algorithm: MatchingAlgorithm, private val con
         if withHeavyGuard then busyLoop()
         isSorted(times) && rooms.forall(_ == "bathroom") && mStatus && !lStatus && value <= 40
 
-    Actor[Action, (Long, Int)] {
-      receive { (selfRef: ActorRef[Action]) =>
+    Actor {
+      receive[Action, (Long, Int)] { (selfRef: ActorRef[Action]) =>
         // E1. Turn on the lights of the bathroom if someone enters in it, and its ambient light is less than 40 lux.
       {
         case (

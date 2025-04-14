@@ -497,21 +497,21 @@ private def getJoinDefinition[M, T](
   *   a matcher instance.
   */
 private def receiveCodegen[M, T](
-    expr: Expr[ActorRef[M] => PartialFunction[Any, Result[T]]]
+    expr: Expr[ActorRef[M] => PartialFunction[Any, Result[M, T]]]
 )(using
     tm: Type[M],
     tt: Type[T],
     quotes: Quotes
-): Expr[MatchingAlgorithm => Matcher[M, Result[T]]] =
+): Expr[MatchingAlgorithm => Matcher[M, Result[M, T]]] =
   import quotes.reflect.*
 
   '{ (algorithm: MatchingAlgorithm) =>
-    SelectMatcher[M, Result[T]](
+    SelectMatcher[M, Result[M, T]](
       algorithm,
       ${
         Expr.ofList(
           getJoinDefinition(
-            expr.asInstanceOf[Expr[ActorRef[M] => PartialFunction[Any, Result[T]]]]
+            expr.asInstanceOf[Expr[ActorRef[M] => PartialFunction[Any, Result[M, T]]]]
           )
         )
       }
@@ -527,6 +527,6 @@ private def receiveCodegen[M, T](
   *   performs pattern-matching on a message queue at runtime.
   */
 inline def receive[M, T](
-    inline f: (ActorRef[M] => PartialFunction[Any, Result[T]])
-): MatchingAlgorithm => Matcher[M, Result[T]] =
+    inline f: (ActorRef[M] => PartialFunction[Any, Result[M, T]])
+): MatchingAlgorithm => Matcher[M, Result[M, T]] =
   ${ receiveCodegen('f) }

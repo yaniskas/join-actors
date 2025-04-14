@@ -28,8 +28,8 @@ enum GuardedSizeMsg:
 def guardedSize1(algorithm: MatchingAlgorithm) =
   import GuardedSizeMsg.*
   var matches = 0
-  Actor[GuardedSizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[GuardedSizeMsg]) =>
+  Actor {
+    receive[GuardedSizeMsg, (Long, Int)] { (_: ActorRef[GuardedSizeMsg]) =>
       {
         case A(x) if x >= 0 =>
           matches += 1
@@ -43,8 +43,8 @@ def guardedSize1(algorithm: MatchingAlgorithm) =
 def guardedSize2(algorithm: MatchingAlgorithm) =
   import GuardedSizeMsg.*
   var matches = 0
-  Actor[GuardedSizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[GuardedSizeMsg]) =>
+  Actor {
+    receive[GuardedSizeMsg, (Long, Int)] { (_: ActorRef[GuardedSizeMsg]) =>
       {
         case (A(x), B(y)) if x == y =>
           matches += 1
@@ -58,8 +58,8 @@ def guardedSize2(algorithm: MatchingAlgorithm) =
 def guardedSize3(algorithm: MatchingAlgorithm) =
   import GuardedSizeMsg.*
   var matches = 0
-  Actor[GuardedSizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[GuardedSizeMsg]) =>
+  Actor {
+    receive[GuardedSizeMsg, (Long, Int)] { (_: ActorRef[GuardedSizeMsg]) =>
       {
         case (A(x), B(y), C(z)) if x == y && y == z =>
           matches += 1
@@ -73,8 +73,8 @@ def guardedSize3(algorithm: MatchingAlgorithm) =
 def guardedSize4(algorithm: MatchingAlgorithm) =
   import GuardedSizeMsg.*
   var matches = 0
-  Actor[GuardedSizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[GuardedSizeMsg]) =>
+  Actor {
+    receive[GuardedSizeMsg, (Long, Int)] { (_: ActorRef[GuardedSizeMsg]) =>
       {
         case (A(x), B(y), C(z), D(w)) if x == y && y == z && z == w =>
           matches += 1
@@ -88,8 +88,8 @@ def guardedSize4(algorithm: MatchingAlgorithm) =
 def guardedSize5(algorithm: MatchingAlgorithm) =
   import GuardedSizeMsg.*
   var matches = 0
-  Actor[GuardedSizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[GuardedSizeMsg]) =>
+  Actor {
+    receive[GuardedSizeMsg, (Long, Int)] { (_: ActorRef[GuardedSizeMsg]) =>
       {
         case (A(x), B(y), C(z), D(w), E(a)) if x == y && y == z && z == w && w == a =>
           matches += 1
@@ -103,8 +103,8 @@ def guardedSize5(algorithm: MatchingAlgorithm) =
 def guardedSize6(algorithm: MatchingAlgorithm) =
   import GuardedSizeMsg.*
   var matches = 0
-  Actor[GuardedSizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[GuardedSizeMsg]) =>
+  Actor {
+    receive[GuardedSizeMsg, (Long, Int)] { (_: ActorRef[GuardedSizeMsg]) =>
       {
         case (A(x), B(y), C(z), D(w), E(a), F(b))
             if x == y && y == z && z == w && w == a && a == b =>

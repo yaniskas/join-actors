@@ -50,7 +50,7 @@ def boundedBuffer(algorithm: MatchingAlgorithm): Actor[BBEvent, Long] =
   var puts    = 0
   var gets    = 0
   Actor[BBEvent, Long] {
-    receive { (bbRef: BBRef) =>
+    receive[BBEvent, Long] { (bbRef: BBRef) =>
       {
         case (Put(producerRef, x), Free(c)) =>
           if c == 1 then bbRef ! Full()

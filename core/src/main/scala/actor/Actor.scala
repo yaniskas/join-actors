@@ -15,11 +15,11 @@ implicit val ec: ExecutionContext =
     Executors.newVirtualThreadPerTaskExecutor()
   )
 
-enum Result[+T]:
-  case Stop(value: T)
-  case Continue
+final case class Stop[+T](value: T)
+case object Continue
+final case class Switch[M, +T](newMatcher: Matcher[M, T])
 
-import Result.*
+type Result[M, +T] = Stop[T] | Continue.type | Switch[M, T]
 
 /** Represents an actor that processes messages of type M and produces a result of type T.
   *
@@ -31,7 +31,7 @@ import Result.*
   * @tparam T
   *   The type of result produced by the actor. Which is the right-hand side of the join pattern.
   */
-class Actor[M, T](private val matcher: Matcher[M, Result[T]]):
+class Actor[M, T](private val matcher: Matcher[M, Result[M, T]]):
   private val mailbox: Mailbox[M] = Mailbox[M]
   private val self                = ActorRef(mailbox)
 
@@ -59,3 +59,4 @@ class Actor[M, T](private val matcher: Matcher[M, Result[T]]):
     matcher(mailbox)(self) match
       case Continue    => run(promise)
       case Stop(value) => promise.success(value)
+      case Switch(newMatcher) => ???

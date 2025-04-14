@@ -34,8 +34,8 @@ class BoundedBuffer(private val algorithm: MatchingAlgorithm, private val config
     import InternalEvent.*
     import ExternalEvent.*
     var matches = 0
-    Actor[BBEvent, (Long, Int)] {
-      receive { (bbRef: BBRef) => {
+    Actor {
+      receive[BBEvent, (Long, Int)] { (bbRef: BBRef) => {
         case (Put(producerRef, x), Free(c)) =>
           if c == 1 then bbRef ! Full()
           else bbRef ! Free(c - 1)

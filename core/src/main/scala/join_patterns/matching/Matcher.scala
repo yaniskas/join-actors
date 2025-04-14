@@ -87,7 +87,7 @@ object CandidateMatches:
   * @tparam T
   *   The type of the RHS of the join pattern.
   */
-trait Matcher[M, T]:
+trait Matcher[M, +T]:
 
   /** The matcher constructor that takes a mailbox and an actor reference and returns the result of
     * the join pattern.

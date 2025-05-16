@@ -18,8 +18,8 @@ case class Done(hits: Int)              extends PingPong
 
 def pingPonger(maxHits: Int = 100, algorithm: MatchingAlgorithm) =
   val pingActor: Actor[PingPong, Int] =
-    Actor[PingPong, Int] {
-      receive { (pingRef: Pinger) =>
+    Actor {
+      receive[PingPong, Int] { (pingRef: Pinger) =>
         {
           case Pong(pongRef, x) =>
             if x < maxHits then
@@ -36,8 +36,8 @@ def pingPonger(maxHits: Int = 100, algorithm: MatchingAlgorithm) =
     }
 
   val pongActor: Actor[PingPong, Int] =
-    Actor[PingPong, Int] {
-      receive { (pongRef: Ponger) =>
+    Actor {
+      receive[PingPong, Int] { (pongRef: Ponger) =>
         {
           case Ping(pingRef, x) =>
             if x < maxHits then

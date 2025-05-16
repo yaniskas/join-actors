@@ -1,6 +1,6 @@
 package join_actors.actor
 
-import java.util.concurrent.LinkedTransferQueue
+import join_actors.actor.Mailbox
 
 /** Represents a reference to an actor.
   *
@@ -10,7 +10,7 @@ import java.util.concurrent.LinkedTransferQueue
   * @tparam M
   *   The type of messages that can be sent to the actor.
   */
-class ActorRef[-M](q: LinkedTransferQueue[M]):
+class ActorRef[-M](q: Mailbox[M]):
   /** Sends a message to the actor.
     *
     * @param m

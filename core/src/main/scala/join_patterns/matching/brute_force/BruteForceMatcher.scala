@@ -1,17 +1,16 @@
 package join_patterns.matching.brute_force
 
-import join_actors.actor.ActorRef
+import join_actors.actor.*
 import join_patterns.matching.functions.*
 import join_patterns.matching.*
+import join_patterns.matching.mixin.MutableMapMessageStore
 import join_patterns.types.*
 
-import java.util.concurrent.LinkedTransferQueue as Mailbox
 import scala.collection.compat.immutable.ArraySeq
 import scala.collection.mutable.Map as MutMap
 
-class BruteForceMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) extends Matcher[M, T]:
-  // Messages extracted from the queue are saved here to survive across apply() calls
-  private val messages         = MutMap[Int, M]()
+class BruteForceMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) extends Matcher[M, T], MutableMapMessageStore[M]:
+  
   private val patternsWithIdxs = patterns.zipWithIndex
 
   private var mQidx = -1

@@ -1,6 +1,6 @@
 package join_patterns.matching
 
-import join_actors.actor.ActorRef
+import join_actors.actor.*
 import join_patterns.matching.brute_force.BruteForceMatcher
 import join_patterns.matching.eager_parallel.EagerParallelMatcher
 import join_patterns.matching.filtering_parallel.FilteringParallelMatcher
@@ -13,7 +13,6 @@ import join_patterns.matching.mutable.MutableStatefulMatcher
 import join_patterns.matching.while_lazy.WhileLazyMatcher
 import join_patterns.types.*
 
-import java.util.concurrent.LinkedTransferQueue as Mailbox
 import scala.Console
 import scala.collection.immutable.{ArraySeq, TreeMap}
 
@@ -102,6 +101,8 @@ trait Matcher[M, +T]:
     *   The result of the join pattern.
     */
   def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T
+
+  def storedMessages: IterableOnce[M]
 
 object SelectMatcher:
   import MatchingAlgorithm.*

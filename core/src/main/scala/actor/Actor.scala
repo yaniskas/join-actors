@@ -1,6 +1,6 @@
 package join_actors.actor
 
-import actor.SynchronizedTransferQueue
+import actor.PrependableLinkedTransferQueue
 import join_patterns.matching.Matcher
 
 import java.util.concurrent.Executors
@@ -17,9 +17,9 @@ implicit val ec: ExecutionContext =
     Executors.newVirtualThreadPerTaskExecutor()
   )
 
-type Mailbox[M] = SynchronizedTransferQueue[M]
+type Mailbox[M] = PrependableLinkedTransferQueue[M]
 object Mailbox:
-  def apply[M](): Mailbox[M] = SynchronizedTransferQueue[M]()
+  def apply[M](): Mailbox[M] = PrependableLinkedTransferQueue[M]()
 
 final case class Stop[+T](value: T)
 case object Continue

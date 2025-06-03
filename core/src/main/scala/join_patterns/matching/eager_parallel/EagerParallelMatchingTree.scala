@@ -18,7 +18,7 @@ import scala.concurrent.{Await, ExecutionContext, Promise}
 class EagerParallelMatchingTree[M, T](private val pattern: JoinPattern[M, T], private val patternIdx: Int, private val numThreads: Int):
   private val patternExtractors = pattern.getPatternInfo.patternExtractors
 
-  private val nodes = JavaTreeMap[MessageIdxs, PatternBins](sizeBiasedOrdering)
+  private val nodes = JavaTreeMap[MessageIdxs, PatternBins](sizeBiasedOrdering2)
   nodes.put(MessageIdxs(), pattern.getPatternInfo.patternBins)
 
   private type Node = (MessageIdxs, PatternBins)

@@ -10,13 +10,7 @@ object Main:
   implicit object MatchingAlgorithmParser extends TokensReader.Simple[MatchingAlgorithm]:
     def shortName: String = "algorithm"
     def read(tokens: Seq[String]) =
-      tokens.headOption match
-        case Some("brute")    => Right(BruteForceAlgorithm)
-        case Some("stateful") => Right(StatefulTreeBasedAlgorithm)
-        case Some("mutable")  => Right(MutableStatefulAlgorithm)
-        case Some("lazy-mutable") => Right(LazyMutableAlgorithm)
-        case Some("while-lazy") => Right(WhileLazyAlgorithm)
-        case _                => Left("Invalid algorithm")
+      tokens.headOption.flatMap(MatchingAlgorithm.parseFromCmdString).toRight("Invalid algorithm")
 
   @main
   def boundedBuffer(
@@ -113,7 +107,7 @@ object Main:
    @arg(doc = "The join pattern matching algorithm to use")
    algorithm: MatchingAlgorithm
   ) =
-    example00(algorithm)
+    exampleFilter(algorithm)
 
   def main(args: Array[String]): Unit =
     ParserForMethods(this).runOrExit(args)

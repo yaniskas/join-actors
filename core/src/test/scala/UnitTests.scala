@@ -750,8 +750,8 @@ class FairMatchingTests extends AnyFunSuite:
     forAll(matchingAlgos) { algorithm =>
       val actor = Actor {
         receive[MsgPlain, Boolean] { (_: ActorRef[MsgPlain]) => {
-          case M1() &&& M3() &&& M5() => Stop(true)
-          case M1() &&& M5() => Stop(false)
+          case M1() &:& M3() &:& M5() => Stop(true)
+          case M1() &:& M5() => Stop(false)
         }
         }(algorithm)
       }
@@ -771,7 +771,7 @@ class FairMatchingTests extends AnyFunSuite:
     forAll(matchingAlgos) { algorithm =>
       val actor = Actor {
         receive[MsgPlain, Boolean] { (_: ActorRef[MsgPlain]) => {
-          case M1() &&& M2() => Stop(true)
+          case M1() &:& M2() => Stop(true)
           case M2() => Stop(false)
         }
         }(algorithm)
@@ -792,8 +792,8 @@ class FairMatchingTests extends AnyFunSuite:
     forAll(matchingAlgos) { algorithm =>
       val actor = Actor {
         receive[MsgPlain, Boolean] { (_: ActorRef[MsgPlain]) => {
-          case M1() &&& M4() => Stop(true)
-          case M2() &&& M3() &&& M4() => Stop(false)
+          case M1() &:& M4() => Stop(true)
+          case M2() &:& M3() &:& M4() => Stop(false)
         }
         }(algorithm)
       }
@@ -904,7 +904,7 @@ class DynamicPatterns extends AnyFunSuite:
     forAll(matchingAlgos) { algorithm =>
       val matcher2 =
         receive[MsgPlain, Boolean] { (_) => {
-          case M1() &&& M3() => Stop(true)
+          case M1() &:& M3() => Stop(true)
         }
         }(algorithm)
 

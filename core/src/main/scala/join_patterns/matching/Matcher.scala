@@ -16,7 +16,7 @@ import join_patterns.matching.while_lazy.WhileLazyMatcher
 import join_patterns.types.*
 
 import scala.Console
-import scala.collection.immutable.{ArraySeq, TreeMap}
+import scala.collection.immutable.{ArraySeq, Queue, TreeMap}
 
 type RHSFnClosure[M, T] = (LookupEnv, ActorRef[M]) => T
 
@@ -56,7 +56,7 @@ type CandidateMatches[M, T] =
 
 object CandidateMatches:
   import math.Ordering.Implicits.seqOrdering
-  private val defaultSeqOrderingForMessageIdxs = seqOrdering[ArraySeq, Int]
+  private val defaultSeqOrderingForMessageIdxs = seqOrdering[Queue, Int]
 
   def apply[M, T](): CandidateMatches[M, T] =
     TreeMap[MatchIdxs, (LookupEnv, RHSFnClosure[M, T])]()(

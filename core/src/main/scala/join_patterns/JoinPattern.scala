@@ -3,42 +3,56 @@ package join_patterns.types
 import join_actors.actor.ActorRef
 
 import scala.collection.Factory
-import scala.collection.immutable.{ArraySeq, TreeMap}
+import scala.collection.immutable.{ArraySeq, Queue, TreeMap}
 import scala.collection.mutable.Builder
 
 type MessageIdx  = Int
 
-type MessageIdxs = ArraySeq[MessageIdx]
+type MessageIdxs = Queue[MessageIdx]
 object MessageIdxs extends Factory[MessageIdx, MessageIdxs]:
-  def apply(elems: MessageIdx*): MessageIdxs = ArraySeq(elems*)
+  def apply(elems: MessageIdx*): MessageIdxs = Queue(elems*)
 
   def fromSpecific(it: IterableOnce[MessageIdx]): MessageIdxs =
-    it.iterator.to(ArraySeq)
+    it.iterator.to(Queue)
 
   def newBuilder: Builder[MessageIdx, MessageIdxs] =
-    ArraySeq.newBuilder[MessageIdx]
+    Queue.newBuilder[MessageIdx]
 
 
 type PatternIdx  = Int
 
-type PatternIdxs = ArraySeq[PatternIdx]
+type PatternIdxs = List[PatternIdx]
 object PatternIdxs extends Factory[PatternIdx, PatternIdxs]:
-  def apply(elems: PatternIdx*): PatternIdxs = ArraySeq(elems*)
+  def apply(elems: PatternIdx*): PatternIdxs = List(elems*)
 
   def fromSpecific(it: IterableOnce[PatternIdx]): PatternIdxs =
-    it.iterator.to(ArraySeq)
+    it.iterator.to(List)
 
   def newBuilder: Builder[PatternIdx, PatternIdxs] =
-    ArraySeq.newBuilder[PatternIdx]
+    List.newBuilder[PatternIdx]
 
 
-given sizeBiasedOrdering: Ordering[ArraySeq[PatternIdx]] with
-  def compare(x: ArraySeq[PatternIdx], y: ArraySeq[PatternIdx]): Int =
+given sizeBiasedOrdering: Ordering[Queue[PatternIdx]] with
+  def compare(x: Queue[PatternIdx], y: Queue[PatternIdx]): Int =
     val sizeComp = Integer.compare(x.length, y.length) // compare by size first
     if sizeComp != 0 then -sizeComp // if sizes are different, return the comparison result
     else
       var acc = 0
       var i   = 0
+      while i < x.size && i < y.size && acc == 0 do
+        val a = x(i)
+        val b = y(i)
+        if a != b then acc = Integer.compare(a, b)
+        i += 1
+      acc
+
+given sizeBiasedOrdering2: Ordering[List[PatternIdx]] with
+  def compare(x: List[PatternIdx], y: List[PatternIdx]): Int =
+    val sizeComp = Integer.compare(x.length, y.length) // compare by size first
+    if sizeComp != 0 then -sizeComp // if sizes are different, return the comparison result
+    else
+      var acc = 0
+      var i = 0
       while i < x.size && i < y.size && acc == 0 do
         val a = x(i)
         val b = y(i)

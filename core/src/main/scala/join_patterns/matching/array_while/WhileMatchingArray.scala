@@ -102,7 +102,7 @@ class WhileMatchingArray[M, T](private val pattern: JoinPattern[M, T], private v
         val v1 = arr1(i1)
         val v2 = arr2(i2)
 
-        val comp = sizeBiasedOrdering.compare(v1._1, v2._1)
+        val comp = sizeBiasedOrdering2.compare(v1._1, v2._1)
 
         if comp <= 0 then
           res(ires) = v1

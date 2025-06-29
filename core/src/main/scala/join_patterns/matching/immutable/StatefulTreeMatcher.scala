@@ -1,18 +1,17 @@
 package join_patterns.matching.immutable
 
-import join_actors.actor.ActorRef
+import join_actors.actor.*
 import join_patterns.matching.functions.*
 import join_patterns.matching.*
 import join_patterns.types.*
 import join_patterns.matching.immutable.*
+import join_patterns.matching.mixin.MutableMapMessageStore
 
-import java.util.concurrent.LinkedTransferQueue as Mailbox
 import scala.collection.mutable.Map as MutMap
 
 class StatefulTreeMatcher[M, T](private val patterns: List[JoinPattern[M, T]])
-    extends Matcher[M, T]:
-  // Messages extracted from the queue are saved here to survive across apply() calls
-  private val messages         = MutMap[Int, M]()
+    extends Matcher[M, T], MutableMapMessageStore[M]:
+
   private val patternsWithIdxs = patterns.zipWithIndex
 
   // Init patterns with empty MatchingTree and maintain across apply() calls

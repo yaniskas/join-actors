@@ -1,4 +1,4 @@
-package join_patterns.matching.while_eager
+package join_patterns.matching.array_while
 
 import join_actors.actor.*
 import join_patterns.matching.mixin.MutableMapMessageStore
@@ -8,12 +8,12 @@ import join_patterns.util.*
 
 import scala.collection.mutable.{ArrayBuffer, HashMap as MutableHashMap}
 
-class WhileEagerMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) extends Matcher[M, T], MutableMapMessageStore[M]:
+class ArrayWhileMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) extends Matcher[M, T], MutableMapMessageStore[M]:
 
   private var nextMessageIndex = 0
 
-  private val matchingTrees: List[WhileEagerMatchingTree[M, T]] =
-    patterns.zipWithIndex.map(WhileEagerMatchingTree(_, _))
+  private val matchingArrays: List[WhileMatchingArray[M, T]] =
+    patterns.zipWithIndex.map(WhileMatchingArray(_, _))
 
 
   def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T =
@@ -21,13 +21,14 @@ class WhileEagerMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) ext
 
     while result.isEmpty do
       val msg = q.take()
+//      println(s"Received message $msg")
       val index = nextMessageIndex
       nextMessageIndex += 1
 
       messages.update(index, msg)
 
       val matches = ArrayBuffer[CandidateMatchOpt[M, T]]()
-      for tree <- matchingTrees.fast do matches.append(tree.findMatch(index, msg, messages))
+      for arr <- matchingArrays.fast do matches.append(arr.findMatch(index, msg, messages))
 
       val candidateMatches: CandidateMatches[M, T] =
         matches.foldLeft(CandidateMatches[M, T]()) {
@@ -42,7 +43,7 @@ class WhileEagerMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) ext
         result = Some(rhsFn(substs, selfRef))
 
         // Prune tree
-        for tree <- matchingTrees.fast do
+        for tree <- matchingArrays.fast do
           tree.pruneTree(candidateQidxs)
 
         // Remove selected message indices from messages

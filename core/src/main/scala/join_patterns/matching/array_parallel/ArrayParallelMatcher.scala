@@ -1,4 +1,4 @@
-package join_patterns.matching.while_eager
+package join_patterns.matching.array_parallel
 
 import join_actors.actor.*
 import join_patterns.matching.mixin.MutableMapMessageStore
@@ -8,12 +8,12 @@ import join_patterns.util.*
 
 import scala.collection.mutable.{ArrayBuffer, HashMap as MutableHashMap}
 
-class WhileEagerMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) extends Matcher[M, T], MutableMapMessageStore[M]:
+class ArrayParallelMatcher[M, T](private val patterns: List[JoinPattern[M, T]], numThreads: Int) extends Matcher[M, T], MutableMapMessageStore[M]:
 
   private var nextMessageIndex = 0
 
-  private val matchingTrees: List[WhileEagerMatchingTree[M, T]] =
-    patterns.zipWithIndex.map(WhileEagerMatchingTree(_, _))
+  private val matchingTrees: List[ParallelMatchingArray[M, T]] =
+    patterns.zipWithIndex.map(ParallelMatchingArray(_, _, numThreads))
 
 
   def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T =

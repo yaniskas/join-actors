@@ -47,6 +47,7 @@ The source code for the join patterns library is organized as follows:
         - `lazy_parallel`: The lazy parallel matching algorithm
         - `filtering_while`: The singlethreaded filtering algorithm
         - `filtering_parallel`: The multithreaded filtering algorithm
+        - `array_while`: The array-based matching algorithm
         - `functions`: Utility functions for matching which are used by all algorithms
       - `util`: Miscellaneous utilities used by the other code
       - `CodeGenerationMacros.scala`: Defines the `receive` macro used to create join definitions
@@ -194,6 +195,7 @@ The `--algorithm` flag can be set to any of the following, allowing access to al
 - `lazy-parallel`
 - `filtering-while`
 - `filtering-parallel`
+- `array-while`
 
 There are other examples available in the `examples` package that can be run in a similar way.
 

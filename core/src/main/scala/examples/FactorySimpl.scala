@@ -29,8 +29,8 @@ import WorkerEvent.*
 import SystemEvent.*
 
 def monitor(algorithm: MatchingAlgorithm) =
-  Actor[Event, Unit] {
-    receive { (self: ActorRef[Event]) =>
+  Actor {
+    receive[Event, Unit] { (self: ActorRef[Event]) =>
       {
         case (Fault(fid1, ts1), Fix(fid2, ts2)) if fid1 == fid2 =>
           println(

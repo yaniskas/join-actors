@@ -21,8 +21,8 @@ import SizeMsg.*
 
 def size1(algorithm: MatchingAlgorithm) =
   var matches = 0
-  Actor[SizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[SizeMsg]) =>
+  Actor {
+    receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
     {
       case A() =>
         matches += 1
@@ -35,8 +35,8 @@ def size1(algorithm: MatchingAlgorithm) =
 
 def size2(algorithm: MatchingAlgorithm) =
   var matches = 0
-  Actor[SizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[SizeMsg]) =>
+  Actor {
+    receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
     {
       case (A(), B()) =>
         matches += 1
@@ -49,8 +49,8 @@ def size2(algorithm: MatchingAlgorithm) =
 
 def size3(algorithm: MatchingAlgorithm) =
   var matches = 0
-  Actor[SizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[SizeMsg]) =>
+  Actor {
+    receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
     {
       case (A(), B(), C()) =>
         matches += 1
@@ -63,8 +63,8 @@ def size3(algorithm: MatchingAlgorithm) =
 
 def size4(algorithm: MatchingAlgorithm) =
   var matches = 0
-  Actor[SizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[SizeMsg]) =>
+  Actor {
+    receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
     {
       case (A(), B(), C(), D()) =>
         matches += 1
@@ -77,8 +77,8 @@ def size4(algorithm: MatchingAlgorithm) =
 
 def size5(algorithm: MatchingAlgorithm) =
   var matches = 0
-  Actor[SizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[SizeMsg]) =>
+  Actor {
+    receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
     {
       case (A(), B(), C(), D(), E()) =>
         matches += 1
@@ -91,8 +91,8 @@ def size5(algorithm: MatchingAlgorithm) =
 
 def size6(algorithm: MatchingAlgorithm) =
   var matches = 0
-  Actor[SizeMsg, (Long, Int)] {
-    receive { (_: ActorRef[SizeMsg]) =>
+  Actor {
+    receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
     {
       case (A(), B(), C(), D(), E(), F()) =>
         matches += 1

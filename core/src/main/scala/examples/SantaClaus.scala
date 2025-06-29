@@ -25,8 +25,8 @@ val N_REINDEERS = 9
 val N_ELVES = 3
 
 def santaClausActor(algorithm: MatchingAlgorithm) =
-  val actor = Actor[SAction, Unit] {
-    receive { (selfRef: SantaClausRef) =>
+  val actor = Actor {
+    receive[SAction, Unit] { (selfRef: SantaClausRef) =>
       {
         case (
               IsBack(reindeerRef0),
@@ -69,8 +69,8 @@ def santaClausActor(algorithm: MatchingAlgorithm) =
 
   actor
 
-def reindeerActor() = Actor[SAction, Unit] {
-  receive { (_: ReindeerRef) =>
+def reindeerActor() = Actor {
+  receive[SAction, Unit] { (_: ReindeerRef) =>
     {
       case CanLeave(_) =>
         println(s"${Console.YELLOW}Going on holiday${Console.RESET}")
@@ -81,8 +81,8 @@ def reindeerActor() = Actor[SAction, Unit] {
   }(MatchingAlgorithm.BruteForceAlgorithm)
 }
 
-def elfActor() = Actor[SAction, Unit] {
-  receive { (_: ElfRef) =>
+def elfActor() = Actor {
+  receive[SAction, Unit] { (_: ElfRef) =>
     {
       case Helped(_) =>
         println(s"${Console.GREEN}Has been helped${Console.RESET}")

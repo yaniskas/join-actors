@@ -1,6 +1,7 @@
 package join_patterns.matching
 
-import join_actors.actor.ActorRef
+import join_actors.actor.*
+import join_patterns.matching.array_parallel.ArrayParallelMatcher
 import join_patterns.matching.array_while.ArrayWhileMatcher
 import join_patterns.matching.buffer_while.BufferWhileMatcher
 import join_patterns.matching.brute_force.BruteForceMatcher
@@ -15,7 +16,6 @@ import join_patterns.matching.mutable.MutableStatefulMatcher
 import join_patterns.matching.while_lazy.WhileLazyMatcher
 import join_patterns.types.*
 
-import java.util.concurrent.LinkedTransferQueue as Mailbox
 import scala.Console
 import scala.collection.immutable.{ArraySeq, TreeMap}
 
@@ -91,7 +91,7 @@ object CandidateMatches:
   * @tparam T
   *   The type of the RHS of the join pattern.
   */
-trait Matcher[M, T]:
+trait Matcher[M, +T]:
 
   /** The matcher constructor that takes a mailbox and an actor reference and returns the result of
     * the join pattern.
@@ -104,6 +104,8 @@ trait Matcher[M, T]:
     *   The result of the join pattern.
     */
   def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T
+
+  def storedMessages: IterableOnce[M]
 
 object SelectMatcher:
   import MatchingAlgorithm.*
@@ -120,4 +122,5 @@ object SelectMatcher:
       case LazyParallelAlgorithm(numThreads)      => LazyParallelMatcher(patterns, numThreads)
       case FilteringParallelAlgorithm(numThreads) => FilteringParallelMatcher(patterns, numThreads)
       case ArrayWhileAlgorithm => ArrayWhileMatcher(patterns)
+      case ArrayParallelAlgorithm(numThreads) => ArrayParallelMatcher(patterns, numThreads)
       case BufferWhileAlgorithm => BufferWhileMatcher(patterns)

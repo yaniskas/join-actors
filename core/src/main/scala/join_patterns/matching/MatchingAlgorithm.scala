@@ -12,6 +12,7 @@ enum MatchingAlgorithm:
   case LazyParallelAlgorithm(numThreads: Int)
   case FilteringParallelAlgorithm(numThreads: Int)
   case ArrayWhileAlgorithm
+  case ArrayParallelAlgorithm(numThreads: Int)
   case BufferWhileAlgorithm
 
   override def toString: String =
@@ -27,6 +28,7 @@ enum MatchingAlgorithm:
       case LazyParallelAlgorithm(numThreads) => s"LazyParallelAlgorithm_$numThreads"
       case FilteringParallelAlgorithm(numThreads) => s"FilteringParallelAlgorithm_$numThreads"
       case ArrayWhileAlgorithm => "ArrayWhileAlgorithm"
+      case ArrayParallelAlgorithm(numThreads) => s"ArrayParallelAlgorithm_$numThreads"
       case BufferWhileAlgorithm => "BufferWhileAlgorithm"
 
 object MatchingAlgorithm:
@@ -42,6 +44,7 @@ object MatchingAlgorithm:
     "lazy-parallel" -> LazyParallelAlgorithm(8),
     "filtering-parallel" -> FilteringParallelAlgorithm(8),
     "array-while" -> ArrayWhileAlgorithm,
+    "array-parallel" -> ArrayParallelAlgorithm(8),
     "buffer-while" -> BufferWhileAlgorithm
   )
 

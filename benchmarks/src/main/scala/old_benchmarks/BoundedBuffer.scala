@@ -52,8 +52,8 @@ case class BBConfig(
 def boundedBuffer(algorithm: MatchingAlgorithm): Actor[BBEvent, (Long, Int)] =
   import BoundedBuffer.*, InternalEvent.*
   var matches = 0
-  Actor[BBEvent, (Long, Int)] {
-    receive { (bbRef: BBRef) =>
+  Actor {
+    receive[BBEvent, (Long, Int)] { (bbRef: BBRef) =>
       {
         case (Put(producerRef, x), Free(c)) =>
           if c == 1 then bbRef ! Full()

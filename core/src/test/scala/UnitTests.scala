@@ -2,6 +2,7 @@ package test
 
 import join_actors.api.*
 import join_actors.api.MatchingAlgorithm.*
+import join_patterns.matching.Matcher
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers.*
 import org.scalatest.prop.TableDrivenPropertyChecks.*
@@ -32,6 +33,16 @@ enum MsgPlain:
 
 import MsgPlain.*
 
+enum MsgWithMatcher:
+  case MM1()
+  case MM2()
+  case MM3()
+  case MM4()
+  case MM5()
+  case MMatcher(matcher: Matcher[MsgWithMatcher, Result[MsgWithMatcher, Boolean]])
+
+import MsgWithMatcher.*
+
 implicit val ec: ExecutionContext =
   ExecutionContext.fromExecutorService(Executors.newVirtualThreadPerTaskExecutor())
 
@@ -46,15 +57,17 @@ val matchingAlgos = Table(
   WhileEagerAlgorithm,
   EagerParallelAlgorithm(2),
   LazyParallelAlgorithm(2),
-  FilteringParallelAlgorithm(2)
+  FilteringParallelAlgorithm(2),
+  ArrayWhileAlgorithm,
+  ArrayParallelAlgorithm(2)
 )
 
 class SingletonPatterns extends AnyFunSuite:
   test("Single Empty Message, no Predicate") {
     val expected = Random.nextInt
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           { case A() => Stop(expected) }
         }(algorithm)
       }
@@ -73,8 +86,8 @@ class SingletonPatterns extends AnyFunSuite:
     val ifZero   = (i: Int) => i == 0
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case A() if ifZero(1) => Stop(expected + 1)
             case A() if ifZero(0) => Stop(expected)
@@ -96,7 +109,7 @@ class SingletonPatterns extends AnyFunSuite:
     val expected = Random.nextInt
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int](receive { (_: ActorRef[Msg]) =>
+      val actor = Actor(receive[Msg, Int] { (_: ActorRef[Msg]) =>
         { case B(n: Int) => Stop(n) }
       }(algorithm))
 
@@ -115,7 +128,7 @@ class SingletonPatterns extends AnyFunSuite:
     val ifZero   = (i: Int) => i == 0
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int](receive { (_: ActorRef[Msg]) =>
+      val actor = Actor(receive[Msg, Int] { (_: ActorRef[Msg]) =>
         {
           case B(n: Int) if ifZero(1) => Stop(n + 1) // Always false
           case B(n: Int) if ifZero(0) => Stop(n)
@@ -136,7 +149,7 @@ class SingletonPatterns extends AnyFunSuite:
     val expected = "test"
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, String](receive { (_: ActorRef[Msg]) =>
+      val actor = Actor(receive[Msg, String] { (_: ActorRef[Msg]) =>
         { case C(n: String) => Stop(n) }
       }(algorithm))
 
@@ -155,8 +168,8 @@ class SingletonPatterns extends AnyFunSuite:
     val ifNotEmpty = (i: String) => i.nonEmpty
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, String] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, String] { (_: ActorRef[Msg]) =>
           {
             case C(n: String) if ifNotEmpty("") =>
               Stop(n.appended(Random.alphanumeric.filter(_.isDigit).head))
@@ -181,8 +194,8 @@ class SingletonPatterns extends AnyFunSuite:
     val expected = input.repeat(rep)
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, String] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, String] { (_: ActorRef[Msg]) =>
           { case F(z: Int, c: String) =>
             Stop(c.repeat(z))
           }
@@ -205,8 +218,8 @@ class SingletonPatterns extends AnyFunSuite:
     val isZero: Int => Boolean = (n: Int) => n == 0
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, String] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, String] { (_: ActorRef[Msg]) =>
           {
             case F(z: Int, c: String) if isZero(z) => Stop(c)
             case F(z: Int, c: String)              => Stop(c.repeat(z))
@@ -228,8 +241,8 @@ class CompositePatterns extends AnyFunSuite:
   test("Multiple Empty Messages, no Predicate") {
     val expected = Random.nextInt
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (D(), A(), E()) => Stop(expected)
             case (A(), D())      => Stop(expected + 1)
@@ -256,8 +269,8 @@ class CompositePatterns extends AnyFunSuite:
     val expected = Random.nextInt
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           { case (A()) => Stop(expected) }
         }(algorithm)
       }
@@ -277,8 +290,8 @@ class CompositePatterns extends AnyFunSuite:
     val isZero: Int => Boolean = (n: Int) => n == 0
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (A(), D(), E()) if isZero(0) => Stop(expected + 1)
             case (A(), D(), E())              => Stop(expected)
@@ -303,8 +316,8 @@ class CompositePatterns extends AnyFunSuite:
     val expected = i0
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (B(i0: Int), B(i1: Int)) => Stop(i0 + i1)
             case B(i: Int) =>
@@ -329,8 +342,8 @@ class CompositePatterns extends AnyFunSuite:
     val rep      = Random.nextInt(3)
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, String] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, String] { (_: ActorRef[Msg]) =>
           {
             case (F(i0: Int, s: String), D(), B(i1: Int)) => Stop(s.repeat(i0 + i1))
             case D()                                      => Stop(expected)
@@ -356,8 +369,8 @@ class CompositePatterns extends AnyFunSuite:
     val isEmpty: String => Boolean = (s: String) => s.isEmpty
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, String] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, String] { (_: ActorRef[Msg]) =>
           {
             case (F(i0: Int, s: String), D(), B(i1: Int)) if isEmpty(s) =>
               Stop("Hello World")
@@ -384,8 +397,8 @@ class CompositePatterns extends AnyFunSuite:
     val expected = Random.nextInt
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (D(), A(), E()) => Stop(expected)
             case (A(), E())      => Stop(expected + 1)
@@ -419,8 +432,8 @@ class CompositePatterns extends AnyFunSuite:
     val expected = Random.nextInt
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (F(i0: Int, s: String), B(i1: Int)) if i0 == i1 => Stop(expected)
             case (F(i0: Int, s1: String), G(i1: Int, s2: String, i2: Int, b: Boolean))
@@ -461,8 +474,8 @@ class CompositePatterns extends AnyFunSuite:
     val ifNotZero          = (i: Int) => i != 0
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (B(i0: Int), B(i1: Int), A()) if ifNotZero(result0) => Stop(i0 + i1)
             case (B(i0: Int), B(i1: Int), A())                       => Stop(i0)
@@ -488,8 +501,8 @@ class CompositePatterns extends AnyFunSuite:
     val expected                    = result1 + result2
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, String] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, String] { (_: ActorRef[Msg]) =>
           { case G(x: Int, y: String, z: Int, w: Boolean) => Stop(y + z) }
         }(algorithm)
       }
@@ -512,8 +525,8 @@ class CompositePatterns extends AnyFunSuite:
       (boolean: Boolean) => boolean
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case G(x: Int, y: String, z: Int, b: Boolean) if is(b)  => Stop(z)
             case G(x: Int, y: String, z: Int, b: Boolean) if is(!b) => Stop(x)
@@ -536,8 +549,8 @@ class CompositePatterns extends AnyFunSuite:
     val msgs = List[Msg](B(1), B(2), B(3), B(4), B(5), B(6), B(7), B(8), B(9), B(10), B(11), B(12))
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (B(a: Int), B(b: Int), B(c: Int)) if a == 3 && b == 2 && c == 1 => Continue
             case (B(a: Int), B(b: Int), B(c: Int)) if a == 6 && b == 5 && c == 4 => Continue
@@ -562,8 +575,8 @@ class CompositePatterns extends AnyFunSuite:
     val msgs = List[Msg](D(), C(""), G(1, "", 1, false), F(1, ""), B(3), A(), B(2))
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           { case (B(a: Int), A(), B(b: Int)) if a == 3 && b == 2 => Stop(a + b) }
         }(algorithm)
       }
@@ -584,8 +597,8 @@ class FairMatchingTests extends AnyFunSuite:
       List[Msg](F(1, "fst"), F(1, "snd"), F(2, "fst"), F(2, "snd"), F(3, "fst"), F(3, "snd"))
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, List[String]] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, List[String]] { (_: ActorRef[Msg]) =>
           {
             case (F(a1, b1), F(a2, b2), F(a3, b3)) if a1 == 1 && a2 == 2 && a3 == 3 =>
               Stop(List(b1, b2, b3))
@@ -606,8 +619,8 @@ class FairMatchingTests extends AnyFunSuite:
     val msgs = List[Msg](B(1), B(2), B(3))
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (B(a: Int), B(b: Int), B(c: Int)) => Stop(1)
             case (B(a: Int), B(b: Int), B(c: Int)) => Stop(2)
@@ -633,8 +646,8 @@ class FairMatchingTests extends AnyFunSuite:
                 F(2, "snd"), F(3, "fst"), F(3, "snd"))
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, (Int, List[String])] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, (Int, List[String])] { (_: ActorRef[Msg]) =>
           {
             case (F(a1, b1), F(a2, b2), F(a3, b3)) if a1 == 1 && a2 == 2 && a3 == 3 =>
               Stop((1, List(b1, b2, b3)))
@@ -661,8 +674,8 @@ class FairMatchingTests extends AnyFunSuite:
     val msgs = List[Msg](A(), B(1), C("C"), B(2), B(3), B(4), B(5), B(6))
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (B(a: Int), B(b: Int), B(c: Int)) => Stop(a + b + c)
           }
@@ -684,8 +697,8 @@ class FairMatchingTests extends AnyFunSuite:
       List[Msg](D(), B(1), A())
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (self: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (self: ActorRef[Msg]) =>
           {
             case (A(), B(_)) =>
               Stop(1)
@@ -713,8 +726,8 @@ class FairMatchingTests extends AnyFunSuite:
     val msgs = List[Msg](B(1), B(2), B(3), F(3, "f"))
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[Msg, Int] {
-        receive { (_: ActorRef[Msg]) =>
+      val actor = Actor {
+        receive[Msg, Int] { (_: ActorRef[Msg]) =>
           {
             case (B(a), F(b, _)) if a == b => Stop(1)
             case (B(a), B(b), F(c, _)) if b == c => Stop(2)
@@ -737,8 +750,8 @@ class FairMatchingTests extends AnyFunSuite:
     val msgs = List[MsgPlain](M1(), M2(), M3(), M4(), M5())
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[MsgPlain, Boolean] {
-        receive { (_: ActorRef[MsgPlain]) => {
+      val actor = Actor {
+        receive[MsgPlain, Boolean] { (_: ActorRef[MsgPlain]) => {
           case M1() &:& M3() &:& M5() => Stop(true)
           case M1() &:& M5() => Stop(false)
         }
@@ -758,8 +771,8 @@ class FairMatchingTests extends AnyFunSuite:
     val msgs = List[MsgPlain](M1(), M2())
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[MsgPlain, Boolean] {
-        receive { (_: ActorRef[MsgPlain]) => {
+      val actor = Actor {
+        receive[MsgPlain, Boolean] { (_: ActorRef[MsgPlain]) => {
           case M1() &:& M2() => Stop(true)
           case M2() => Stop(false)
         }
@@ -779,13 +792,192 @@ class FairMatchingTests extends AnyFunSuite:
     val msgs = List[MsgPlain](M1(), M2(), M3(), M4())
 
     forAll(matchingAlgos) { algorithm =>
-      val actor = Actor[MsgPlain, Boolean] {
-        receive { (_: ActorRef[MsgPlain]) => {
+      val actor = Actor {
+        receive[MsgPlain, Boolean] { (_: ActorRef[MsgPlain]) => {
           case M1() &:& M4() => Stop(true)
           case M2() &:& M3() &:& M4() => Stop(false)
         }
         }(algorithm)
       }
+      val (futureResult, actorRef) = actor.start()
+
+      msgs.foreach(actorRef ! _)
+
+      val res = Await.result(futureResult, Duration.Inf)
+
+      assert(res)
+    }
+  }
+
+class DynamicPatterns extends AnyFunSuite:
+  test("Basic pattern switch") {
+    val msgs = List(M1(), M2())
+
+    forAll(matchingAlgos) { algorithm =>
+      val matcher2 =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M2() => Stop(true)
+        }}(algorithm)
+
+      val matcher1 =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M1() => Switch(matcher2)
+          case M2() => Stop(false)
+        }
+        }(algorithm)
+
+      val actor = Actor(matcher1)
+
+      val (futureResult, actorRef) = actor.start()
+
+      msgs.foreach(actorRef ! _)
+
+      val res = Await.result(futureResult, Duration.Inf)
+
+      assert(res)
+    }
+  }
+
+  test("Match on pre-switch message") {
+    val msgs = List(M1(), M2())
+
+    forAll(matchingAlgos) { algorithm =>
+      val matcher2 =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M1() => Stop(true)
+        }
+        }(algorithm)
+
+      val matcher1 =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M2() => Switch(matcher2)
+        }
+        }(algorithm)
+
+      val actor = Actor(matcher1)
+
+      val (futureResult, actorRef) = actor.start()
+
+      msgs.foreach(actorRef ! _)
+
+      val res = Await.result(futureResult, Duration.Inf)
+
+      assert(res)
+    }
+  }
+
+  test("Match on pre-double switch message") {
+    val msgs = List(M1(), M2(), M3())
+
+    forAll(matchingAlgos) { algorithm =>
+      val matcher3 =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M1() => Stop(true)
+        }
+        }(algorithm)
+
+      val matcher2 =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M2() => Switch(matcher3)
+        }
+        }(algorithm)
+
+      val matcher1 =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M3() => Switch(matcher2)
+        }
+        }(algorithm)
+
+      val actor = Actor(matcher1)
+
+      val (futureResult, actorRef) = actor.start()
+
+      msgs.foreach(actorRef ! _)
+
+      val res = Await.result(futureResult, Duration.Inf)
+
+      assert(res)
+    }
+  }
+
+  test("Match on pre-switch message and post-switch message") {
+    val msgs = List(M1(), M2(), M3())
+
+    forAll(matchingAlgos) { algorithm =>
+      val matcher2 =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M1() &:& M3() => Stop(true)
+        }
+        }(algorithm)
+
+      val matcher1 =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M2() => Switch(matcher2)
+        }
+        }(algorithm)
+
+      val actor = Actor(matcher1)
+
+      val (futureResult, actorRef) = actor.start()
+
+      msgs.foreach(actorRef ! _)
+
+      val res = Await.result(futureResult, Duration.Inf)
+
+      assert(res)
+    }
+  }
+
+  test("Switch and switch back") {
+    val msgs = List(M1(), M2(), M3())
+
+    forAll(matchingAlgos) { algorithm =>
+      lazy val matcher1: Matcher[MsgPlain, Result[MsgPlain, Boolean]] =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M1() => Switch(matcher2)
+          case M2() => Stop(false)
+          case M3() => Stop(true)
+        }
+        }(algorithm)
+
+      lazy val matcher2: Matcher[MsgPlain, Result[MsgPlain, Boolean]] =
+        receive[MsgPlain, Boolean] { (_) => {
+          case M2() => Switch(matcher1)
+        }
+        }(algorithm)
+
+      val actor = Actor(matcher1)
+
+      val (futureResult, actorRef) = actor.start()
+
+      msgs.foreach(actorRef ! _)
+
+      val res = Await.result(futureResult, Duration.Inf)
+
+      assert(res)
+    }
+  }
+
+  test("Matcher in payload") {
+    forAll(matchingAlgos) { algorithm =>
+
+      val matcherInPayload =
+        receive[MsgWithMatcher, Boolean] { (_) => {
+          case MM1() => Stop(true)
+        }
+        }(algorithm)
+
+      val msgs = List(MMatcher(matcherInPayload), MM1())
+
+      val matcher1 =
+        receive[MsgWithMatcher, Boolean] { (_) => {
+          case MMatcher(payloadMatcher) => Switch(payloadMatcher)
+          case MM1() => Stop(false)
+        }
+        }(algorithm)
+
+      val actor = Actor(matcher1)
+
       val (futureResult, actorRef) = actor.start()
 
       msgs.foreach(actorRef ! _)

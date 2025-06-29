@@ -1,15 +1,14 @@
 package join_patterns.matching.lazy_mutable
 
-import join_actors.actor.ActorRef
+import join_actors.actor.*
+import join_patterns.matching.mixin.MutableMapMessageStore
 import join_patterns.matching.{CandidateMatches, Matcher}
 import join_patterns.types.JoinPattern
 
-import java.util.concurrent.LinkedTransferQueue as Mailbox
 import scala.collection.mutable.HashMap as MutableHashMap
 
-class LazyMutableMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) extends Matcher[M, T]:
+class LazyMutableMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) extends Matcher[M, T], MutableMapMessageStore[M]:
 
-  private val messages = MutableHashMap[Int, M]()
   private var nextMessageIndex = 0
 
   private val matchingTrees: List[LazyMutableMatchingTree[M, T]] =

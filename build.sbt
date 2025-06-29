@@ -39,7 +39,7 @@ ThisBuild / assemblyMergeStrategy := {
   case _                        => MergeStrategy.first
 }
 
-lazy val commonScalacOptions = Seq("-feature")
+lazy val commonScalacOptions = Seq("-feature", "-explain")
 
 lazy val joinActors =
   (project in file("."))

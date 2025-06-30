@@ -59,7 +59,8 @@ val matchingAlgos = Table(
   LazyParallelAlgorithm(2),
   FilteringParallelAlgorithm(2),
   ArrayWhileAlgorithm,
-  ArrayParallelAlgorithm(2)
+  ArrayParallelAlgorithm(2),
+  BufferWhileAlgorithm
 )
 
 class SingletonPatterns extends AnyFunSuite:

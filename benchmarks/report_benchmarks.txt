@@ -1,0 +1,21 @@
+benchmarks/run simple-smart-house --min-param 0 --max-param 20 --matches 25 --algorithms "stateful, mutable, lazy-mutable, while-lazy, while-eager, eager-parallel, lazy-parallel, array-while, array-parallel" --repetitions 20 --warmup 5 --smoothen --path "../Final benchmarks"
+
+benchmarks/run complex-smart-house --min-param 0 --max-param 25 --matches 10 --algorithms "stateful, mutable, lazy-mutable, while-lazy, while-eager, eager-parallel, lazy-parallel, array-while, array-parallel, filtering-while, filtering-parallel" --repetitions 20 --warmup 5 --smoothen --path "../Final benchmarks"
+
+benchmarks/run complex-smart-house --min-param 0 --max-param 100 --matches 10 --algorithms "filtering-while, filtering-parallel" --repetitions 20 --warmup 5 --smoothen --path "../Final benchmarks"
+
+benchmarks/run bounded-buffer --min-param 0 --max-param 20 --bufferBound 100 --count 100 --algorithms "stateful, mutable, lazy-mutable, while-lazy, while-eager, eager-parallel, lazy-parallel, array-while, array-parallel" --repetitions 20 --warmup 15 --smoothen --path "../Final benchmarks"
+
+benchmarks/run bounded-buffer --min-param 0 --max-param 50 --bufferBound 100 --count 100 --algorithms "stateful, mutable, lazy-mutable, while-lazy, while-eager, array-while" --repetitions 20 --warmup 15 --smoothen --path "../Final benchmarks"
+
+benchmarks/run size --min-param 1 --max-param 6 --matches 5000 --algorithms "stateful, mutable, lazy-mutable, while-lazy, while-eager, eager-parallel, lazy-parallel, array-while, array-parallel" --repetitions 20 --warmup 4 --smoothen --path "../Final benchmarks"
+
+benchmarks/run size --min-param 1 --max-param 6 --matches 5000 --noise --algorithms "stateful, mutable, lazy-mutable, while-lazy, while-eager, eager-parallel, lazy-parallel, array-while, array-parallel" --repetitions 20 --warmup 4 --smoothen --path "../Final benchmarks"
+
+benchmarks/run size-with-guards --min-param 1 --max-param 6 --matches 5000 --variant normal --algorithms "stateful, mutable, lazy-mutable, while-lazy, while-eager, eager-parallel, lazy-parallel, array-while, array-parallel" --repetitions 20 --warmup 4 --smoothen --path "../Final benchmarks"
+
+benchmarks/run size-with-guards --min-param 1 --max-param 6 --matches 5000 --variant noisy --algorithms "stateful, mutable, lazy-mutable, while-lazy, while-eager, eager-parallel, lazy-parallel, array-while, array-parallel" --repetitions 20 --warmup 4 --smoothen --path "../Final benchmarks"
+
+benchmarks/run size-with-guards --min-param 1 --max-param 6 --matches 4 --variant non-satisfying --algorithms "stateful, mutable, lazy-mutable, while-lazy, while-eager, eager-parallel, lazy-parallel, array-while, array-parallel" --repetitions 20 --warmup 4 --smoothen --path "../Final benchmarks"
+
+benchmarks/run simple-smart-house --min-param 0 --param-step 1 --max-param 5 --matches 25 --algorithms "while-lazy, lazy-parallel" --repetitions 20 --warmup 2 --heavy-guard --smoothen --path "../Final benchmarks"

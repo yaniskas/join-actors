@@ -158,8 +158,8 @@ private def makeDatasetFrom(xAxis: Seq[Int], results: ProcessedBenchmarkSeriesRe
             x,
             x,
             res.average,
-            res.average - std/2,
-            res.average + std/2
+            res.average - std,
+            res.average + std
           )
         case None =>
           series.add(

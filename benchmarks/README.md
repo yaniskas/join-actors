@@ -67,3 +67,10 @@ In addition, each benchmark has its own specific parameters:
 **Size with guards**
 - `matches`: The number of matches the size actor should perform
 - `variant`: The benchmark variant to run: either "normal", "noisy", or "non-matching"
+
+The benchmarks used in the thesis report can be found in the file `report_benchmarks.txt`. All the benchmarks within
+this file can be run sequentially using the sbt shell's `<` operator:
+
+```bash
+< benchmarks/report_benchmarks.txt
+```

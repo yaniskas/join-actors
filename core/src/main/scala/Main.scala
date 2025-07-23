@@ -43,26 +43,26 @@ object Main:
     )
     runBB(bbConfig)
 
-  @main
-  def chameneos(
-    commonConfig: CommonRunConfig,
-    @arg(short = 'm', doc = "The maximum number of meetings")
-    maxMeetings: Int = 100,
-    @arg(
-      short = 'c',
-      doc = "The maximum number of chameneos"
-    )
-    maxChameneos: Int = 50
-  ): Unit =
-    val chameneosConfig = ChameneosConfig(
-      maxNumberOfMeetings = maxMeetings,
-      numberOfChameneos = maxChameneos,
-      algorithm = commonConfig.algorithm
-    )
-
-    chameneosExample(
-      chameneosConfig
-    )
+//  @main
+//  def chameneos(
+//    commonConfig: CommonRunConfig,
+//    @arg(short = 'm', doc = "The maximum number of meetings")
+//    maxMeetings: Int = 100,
+//    @arg(
+//      short = 'c',
+//      doc = "The maximum number of chameneos"
+//    )
+//    maxChameneos: Int = 50
+//  ): Unit =
+//    val chameneosConfig = ChameneosConfig(
+//      maxNumberOfMeetings = maxMeetings,
+//      numberOfChameneos = maxChameneos,
+//      algorithm = commonConfig.algorithm
+//    )
+//
+//    chameneosExample(
+//      chameneosConfig
+//    )
 
   @main
   def smartHouse(
@@ -76,30 +76,30 @@ object Main:
       msgs
     )
 
-  @main
-  def santaClaus(
-      commonConfig: CommonRunConfig,
-      @arg(short = 'n', doc = "The number of deliveries to make")
-      deliveries: Int = 5
-  ): Unit =
-    santaClausExample(
-      commonConfig.algorithm,
-      deliveries
-    )
+//  @main
+//  def santaClaus(
+//      commonConfig: CommonRunConfig,
+//      @arg(short = 'n', doc = "The number of deliveries to make")
+//      deliveries: Int = 5
+//  ): Unit =
+//    santaClausExample(
+//      commonConfig.algorithm,
+//      deliveries
+//    )
 
-  @main
-  def printerSpooler(
-      commonConfig: CommonRunConfig,
-      @arg(short = 'p', doc = "The number of printers")
-      printers: Int = 10,
-      @arg(short = 'j', doc = "The number of jobs")
-      jobs: Int = 100
-  ): Unit =
-    printerSpoolerExample(
-      commonConfig.algorithm,
-      printers,
-      jobs
-    )
+//  @main
+//  def printerSpooler(
+//      commonConfig: CommonRunConfig,
+//      @arg(short = 'p', doc = "The number of printers")
+//      printers: Int = 10,
+//      @arg(short = 'j', doc = "The number of jobs")
+//      jobs: Int = 100
+//  ): Unit =
+//    printerSpoolerExample(
+//      commonConfig.algorithm,
+//      printers,
+//      jobs
+//    )
 
   @main
   def factorySimple(

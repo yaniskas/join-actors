@@ -114,8 +114,8 @@ type Event = MachineEvent | WorkerEvent | SystemEvent
 
 ```scala
 def monitor(algorithm: MatchingAlgorithm) =
-  Actor[Event, Unit] {
-    receive { (self: ActorRef[Event]) =>
+  Actor {
+    receive[Event, Unit] { (self: ActorRef[Event]) =>
       {
         case Fault(fid1, ts1) &:& Fix(fid2, ts2) if fid1 == fid2 => ...
         case Fault(fid1, ts1) &:& Fault(fid2, ts2) &:& Fix(fid3, ts3)
@@ -176,12 +176,24 @@ To run the tests of the core library, run the following command:
 sbt core/test
 ```
 
-To run for instance the `Factory Simple` example with the predefined configuration
-run the following command:
+We also provide some runnable examples demonstrating different uses of join patterns (not to be confused with our
+benchmark suite, as some names are shared). To run for instance the `Factory Simple` example with the predefined
+configuration run the following command:
 
 ```bash
 sbt "core/run factory-simple --algorithm stateful"
 ```
+
+The following examples are available. We also list the optional parameters for each example:
+
+- `factory-simple`
+- `bounded-buffer`
+  - The `--buffer-bound` argument sets the buffer bound
+  - The `--count` parameter sets the maximum number of producers and consumers
+- `smart-house`
+  - The `--messages` parameter sets the number of messages to send
+- `payment`
+  - The `--requests` parameter sets the number of payment and token requests sent
 
 The `--algorithm` flag can be set to any of the following, allowing access to all implemented algorithms:
 
@@ -196,8 +208,6 @@ The `--algorithm` flag can be set to any of the following, allowing access to al
 - `filtering-while`
 - `filtering-parallel`
 - `array-while`
-
-There are other examples available in the `examples` package that can be run in a similar way.
 
 ## Benchmarks
 

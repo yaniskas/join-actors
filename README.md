@@ -34,8 +34,8 @@ The source code for the join patterns library is organized as follows:
       matching algorithm and code generation macros.
       - `matching`: Contains all implemented join pattern matching algorithms 
         - `Matcher.scala`: The matcher trait that is implemented by the
-          different join pattern matching algorithms.
-        - `MatchingAlgorithm.scala`: An enumeration used for selecting an algorithm
+          different join pattern matching algorithms. This also contains the 
+          `MatcherFactory` implementation that every matcher must implement.
         - `brute_force`: The brute-force matcher implementation.
         - `immutable`: The stateful tree-based matcher
           implementation.
@@ -113,7 +113,7 @@ type Event = MachineEvent | WorkerEvent | SystemEvent
   The old tuple-like syntax is also supported
 
 ```scala
-def monitor(algorithm: MatchingAlgorithm) =
+def monitor(matcher: MatcherFactory) =
   Actor {
     receive[Event, Unit] { (self: ActorRef[Event]) =>
       {
@@ -123,14 +123,14 @@ def monitor(algorithm: MatchingAlgorithm) =
         case DelayedFault(fid1, ts1) &:& Fix(fid2, ts2) if fid1 == fid2 => ...
         ...
       }
-    }(algorithm)
+    }(matcher)
   }
 ```
 
 - Finally, we can run the monitor as follows:
 
 ```scala
-def runFactorySimple(algorithm: MatchingAlgorithm) =
+def runFactorySimple(matcher: MatcherFactory) =
   // Predefined sequence of events
   val events = List(
     Fault(1, ONE_MIN),
@@ -140,7 +140,7 @@ def runFactorySimple(algorithm: MatchingAlgorithm) =
   )
 
   // Start the monitor actor
-  val (monitorFut, monitorRef) = monitor(algorithm).start()
+  val (monitorFut, monitorRef) = monitor(matcher).start()
 
   // Send the events to the monitor actor
   events foreach (event => monitorRef ! event)
@@ -152,7 +152,7 @@ def runFactorySimple(algorithm: MatchingAlgorithm) =
   Await.ready(monitorFut, Duration(15, "m"))
 ```
 
-The algorithm can be set to any of the cases defined in the `MatchingAlgorithm` enumeration, allowing access to all implemented algorithms.
+The matcher can be set to any `MatcherFactory` implementations, allowing access to all matchers.
 In the example above, some minor details are omitted for brevity. The full
 example can be found in the [FactorySimpl.scala](core/src/main/scala/examples/FactorySimpl.scala) file.
 
@@ -181,7 +181,7 @@ benchmark suite, as some names are shared). To run for instance the `Factory Sim
 configuration run the following command:
 
 ```bash
-sbt "core/run factory-simple --algorithm stateful"
+sbt "core/run factory-simple --matcher stateful"
 ```
 
 The following examples are available. We also list the optional parameters for each example:
@@ -195,7 +195,7 @@ The following examples are available. We also list the optional parameters for e
 - `payment`
   - The `--requests` parameter sets the number of payment and token requests sent
 
-The `--algorithm` flag can be set to any of the following, allowing access to all implemented algorithms:
+The `--matcher` flag can be set to any of the following, allowing access to all implemented matchers:
 
 - `brute`
 - `stateful`

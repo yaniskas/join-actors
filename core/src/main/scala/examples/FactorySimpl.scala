@@ -6,9 +6,9 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 // Milliseconds in one minute
-private val ONE_MIN    = 1000 * 60
-private val ONE_DAY    = ONE_MIN * 60 * 24
-private val TEN_MIN    = ONE_MIN * 10
+private val ONE_MIN = 1000 * 60
+private val ONE_DAY = ONE_MIN * 60 * 24
+private val TEN_MIN = ONE_MIN * 10
 private val QUARTER_HR = ONE_MIN * 15
 private val THIRTY_MIN = ONE_MIN * 30
 
@@ -20,19 +20,20 @@ enum WorkerEvent:
 
 enum SystemEvent:
   case DelayedFault(faultID: Int, ts: Long)
-  case Shutdown()
 
-type Event = MachineEvent | WorkerEvent | SystemEvent
+final case class Shutdown()
+
+type Event = MachineEvent | WorkerEvent | SystemEvent | Shutdown
 
 import MachineEvent.*
 import WorkerEvent.*
 import SystemEvent.*
 
-def monitor(algorithm: MatchingAlgorithm) =
+def monitor(algorithm: MatcherFactory) =
   Actor {
     receive[Event, Unit] { (self: ActorRef[Event]) =>
       {
-        case (Fault(fid1, ts1), Fix(fid2, ts2)) if fid1 == fid2 =>
+        case Fault(fid1, ts1) &:& Fix(fid2, ts2) if fid1 == fid2 =>
           println(
             s"========================= ${Console.BLUE}${Console.UNDERLINED}Join Pattern 01${Console.RESET} =========================\n"
           )
@@ -47,7 +48,7 @@ def monitor(algorithm: MatchingAlgorithm) =
           )
           Continue
 
-        case (Fault(fid1, ts1), Fault(fid2, ts2), Fix(fid3, ts3))
+        case Fault(fid1, ts1) &:& Fault(fid2, ts2) &:& Fix(fid3, ts3)
             if fid2 == fid3 && ts2 > ts1 + TEN_MIN =>
           println(
             s"========================= ${Console.BLUE}${Console.UNDERLINED}Join Pattern 02${Console.RESET} =========================\n"
@@ -64,7 +65,7 @@ def monitor(algorithm: MatchingAlgorithm) =
           self ! DelayedFault(fid1, ts1) // Re-enqueue
           Continue
 
-        case (DelayedFault(fid1, ts1), Fix(fid2, ts2)) if fid1 == fid2 =>
+        case DelayedFault(fid1, ts1) &:& Fix(fid2, ts2) if fid1 == fid2 =>
           println(
             s"========================= ${Console.BLUE}${Console.UNDERLINED}Join Pattern 03${Console.RESET} =========================\n"
           )
@@ -85,10 +86,10 @@ def monitor(algorithm: MatchingAlgorithm) =
           )
           Stop(())
       }
-    }(algorithm)
+    }(matcher)
   }
 
-def runFactorySimple(algorithm: MatchingAlgorithm) =
+def runFactorySimple(matcher: MatcherFactory) =
   val events = List(
     Fault(1, ONE_MIN),
     Fault(2, TEN_MIN),
@@ -96,7 +97,7 @@ def runFactorySimple(algorithm: MatchingAlgorithm) =
     Fix(3, THIRTY_MIN)
   )
 
-  val (monitorFut, monitorRef) = monitor(algorithm).start()
+  val (monitorFut, monitorRef) = monitor(matcher).start()
 
   events foreach (msg => monitorRef ! msg)
 

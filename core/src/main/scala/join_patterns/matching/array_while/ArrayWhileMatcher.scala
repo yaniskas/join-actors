@@ -2,19 +2,23 @@ package join_patterns.matching.array_while
 
 import join_actors.actor.*
 import join_patterns.matching.mixin.MutableMapMessageStore
-import join_patterns.matching.{CandidateMatchOpt, CandidateMatches, Matcher}
+import join_patterns.matching.CandidateMatchOpt
+import join_patterns.matching.CandidateMatches
+import join_patterns.matching.Matcher
 import join_patterns.types.JoinPattern
 import join_patterns.util.*
 
 import scala.collection.mutable.{ArrayBuffer, HashMap as MutableHashMap}
+import join_patterns.matching.MatcherFactory
+import join_patterns.types.JoinDefinition
 
-class ArrayWhileMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) extends Matcher[M, T], MutableMapMessageStore[M]:
+class ArrayWhileMatcher[M, T](private val patterns: JoinDefinition[M, T])
+  extends Matcher[M, T], MutableMapMessageStore[M]:
 
   private var nextMessageIndex = 0
 
   private val matchingArrays: List[WhileMatchingArray[M, T]] =
     patterns.zipWithIndex.map(WhileMatchingArray(_, _))
-
 
   def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T =
     var result: Option[T] = None
@@ -43,11 +47,15 @@ class ArrayWhileMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) ext
         result = Some(rhsFn(substs, selfRef))
 
         // Prune tree
-        for tree <- matchingArrays.fast do
-          tree.pruneTree(candidateQidxs)
+        for tree <- matchingArrays.fast do tree.pruneTree(candidateQidxs)
 
         // Remove selected message indices from messages
-        for idx <- candidateQidxs.fast do
-          messages.remove(idx)
+        for idx <- candidateQidxs.fast do messages.remove(idx)
 
     result.get
+
+object ArrayWhileMatcher extends MatcherFactory:
+  def apply[M, T]: JoinDefinition[M, T] => Matcher[M, T] =
+    (joinDefinition: JoinDefinition[M, T]) => new ArrayWhileMatcher(joinDefinition)
+
+  override def toString(): String = "ArrayWhileMatcher"

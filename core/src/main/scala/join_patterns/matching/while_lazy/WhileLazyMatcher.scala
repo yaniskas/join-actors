@@ -7,14 +7,16 @@ import join_patterns.types.JoinPattern
 import join_patterns.util.*
 
 import scala.collection.mutable.{ArrayBuffer, HashMap as MutableHashMap}
+import join_patterns.matching.MatcherFactory
+import join_patterns.types.JoinDefinition
 
-class WhileLazyMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) extends Matcher[M, T], MutableMapMessageStore[M]:
+class WhileLazyMatcher[M, T](private val patterns: JoinDefinition[M, T])
+  extends Matcher[M, T], MutableMapMessageStore[M]:
 
   private var nextMessageIndex = 0
 
   private val matchingTrees: List[WhileLazyMatchingTree[M, T]] =
     patterns.zipWithIndex.map(WhileLazyMatchingTree(_, _))
-
 
   def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T =
     var result: Option[T] = None
@@ -42,11 +44,15 @@ class WhileLazyMatcher[M, T](private val patterns: List[JoinPattern[M, T]]) exte
         result = Some(rhsFn(substs, selfRef))
 
         // Prune tree
-        for tree <- matchingTrees.fast do
-          tree.pruneTree(candidateQidxs)
+        for tree <- matchingTrees.fast do tree.pruneTree(candidateQidxs)
 
         // Remove selected message indices from messages
-        for idx <- candidateQidxs.fast do
-          messages.remove(idx)
+        for idx <- candidateQidxs.fast do messages.remove(idx)
 
     result.get
+
+object WhileLazyMatcher extends MatcherFactory:
+  def apply[M, T]: JoinDefinition[M, T] => Matcher[M, T] =
+    (joinDefinition: JoinDefinition[M, T]) => new WhileLazyMatcher(joinDefinition)
+
+  override def toString(): String = "WhileLazyMatcher"

@@ -17,21 +17,21 @@ enum PrinterAuth:
 
 type SpoolerMsgs = PrinterSpoolerMessage | PrinterAuth
 
-def printerSpoolerExample(algorithm: MatchingAlgorithm, nPrinters: Int, nJobs: Int): Unit =
+def printerSpoolerExample(matcher: MatcherFactory, nPrinters: Int, nJobs: Int): Unit =
   import PrinterSpoolerMessage.*
   import PrinterAuth.*
   val printer = Actor {
     receive[SpoolerMsgs, Unit] { (self: ActorRef[SpoolerMsgs]) =>
       {
-        case (Auth(cid1), Ready(printerId1), Job(jobId, cid2, printerId2))
+        case Auth(cid1) &:& Ready(printerId1) &:& Job(jobId, cid2, printerId2)
             if printerId1 == printerId2 && cid1 == cid2 =>
           println(s"send job $jobId to printer $printerId1")
           Continue
-        case (Ready(printerId), JobDone(jobId)) =>
+        case Ready(printerId) &:& JobDone(jobId) =>
           println(s"job $jobId is done by printer $printerId")
           Stop(())
       }
-    }(algorithm)
+    }(matcher)
   }
 
   val (reaction, pRef) = printer.start()
@@ -42,7 +42,7 @@ def printerSpoolerExample(algorithm: MatchingAlgorithm, nPrinters: Int, nJobs: I
 
   (1 to nJobs).foreach { jobId =>
     val printerId = Random.nextInt(nPrinters) + 1
-    val clientId  = Random.nextInt(10) + 1
+    val clientId = Random.nextInt(10) + 1
     pRef ! Auth(clientId)
     pRef ! Job(jobId, clientId, printerId)
   }

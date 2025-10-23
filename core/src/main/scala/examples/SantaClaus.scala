@@ -2,43 +2,32 @@ package join_actors.examples
 
 import join_actors.api.*
 
-import java.util.concurrent.Executors
-import scala.collection.mutable.ListBuffer
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 
 type SantaClausRef = ActorRef[NeedHelp | IsBack | Rest]
-type ReindeerRef   = ActorRef[CanLeave | Rest]
-type ElfRef        = ActorRef[Helped | Rest]
+type ReindeerRef = ActorRef[CanLeave | Rest]
+type ElfRef = ActorRef[Helped | Rest]
 
 sealed trait SAction
-case class IsBack(reindeerRef: ReindeerRef)  extends SAction
+case class IsBack(reindeerRef: ReindeerRef) extends SAction
 case class CanLeave(santaRef: SantaClausRef) extends SAction
-case class Helped(santaRef: SantaClausRef)   extends SAction
-case class NeedHelp(elfRef: ElfRef)          extends SAction
-case class Rest()                            extends SAction
+case class Helped(santaRef: SantaClausRef) extends SAction
+case class NeedHelp(elfRef: ElfRef) extends SAction
+case class Rest() extends SAction
 
 val N_REINDEERS = 9
 
 val N_ELVES = 3
 
-def santaClausActor(algorithm: MatchingAlgorithm) =
+def santaClausActor(matcher: MatcherFactory) =
   val actor = Actor {
     receive[SAction, Unit] { (selfRef: SantaClausRef) =>
       {
-        case (
-              IsBack(reindeerRef0),
-              IsBack(reindeerRef1),
-              IsBack(reindeerRef2),
-              IsBack(reindeerRef3),
-              IsBack(reindeerRef4),
-              IsBack(reindeerRef5),
-              IsBack(reindeerRef6),
-              IsBack(reindeerRef7),
-              IsBack(reindeerRef8)
-            ) =>
+        case IsBack(reindeerRef0) &:& IsBack(reindeerRef1) &:& IsBack(reindeerRef2)
+            &:& IsBack(reindeerRef3) &:& IsBack(reindeerRef4) &:& IsBack(reindeerRef5)
+            &:& IsBack(reindeerRef6) &:& IsBack(reindeerRef7) &:& IsBack(reindeerRef8) =>
           val reinDeerRefs =
             Array(
               reindeerRef0,
@@ -56,7 +45,7 @@ def santaClausActor(algorithm: MatchingAlgorithm) =
           )
           reinDeerRefs.foreach(_ ! CanLeave(selfRef))
           Continue
-        case (NeedHelp(elfRef0), NeedHelp(elfRef1), NeedHelp(elfRef2)) =>
+        case NeedHelp(elfRef0) &:& NeedHelp(elfRef1) &:& NeedHelp(elfRef2) =>
           println(s"${Console.RED}Ho Ho Ho! Let's help the elves!${Console.RESET}")
           val elfRefs = List(elfRef0, elfRef1, elfRef2)
           elfRefs.foreach(_ ! Helped(selfRef))
@@ -64,7 +53,7 @@ def santaClausActor(algorithm: MatchingAlgorithm) =
         case Rest() =>
           Stop(())
       }
-    }(algorithm)
+    }(matcher)
   }
 
   actor
@@ -78,7 +67,7 @@ def reindeerActor() = Actor {
       case Rest() =>
         Stop(())
     }
-  }(MatchingAlgorithm.BruteForceAlgorithm)
+  }(BruteForceMatcher)
 }
 
 def elfActor() = Actor {
@@ -90,14 +79,10 @@ def elfActor() = Actor {
       case Rest() =>
         Stop(())
     }
-  }(MatchingAlgorithm.BruteForceAlgorithm)
+  }(BruteForceMatcher)
 }
 
-def santaClausExample(algorithm: MatchingAlgorithm, santaActions: Int) =
-  implicit val ec = ExecutionContext.fromExecutorService(
-    Executors.newVirtualThreadPerTaskExecutor()
-  )
-
+def santaClausExample(matcher: MatcherFactory, santaActions: Int) =
   val reindeers = (0 to N_REINDEERS - 1).map { i =>
     reindeerActor().start()
   }.toArray
@@ -106,7 +91,7 @@ def santaClausExample(algorithm: MatchingAlgorithm, santaActions: Int) =
     elfActor().start()
   }.toArray
 
-  val santa = santaClausActor(algorithm)
+  val santa = santaClausActor(matcher)
 
   val (santaActs, santaRef) = santa.start()
 

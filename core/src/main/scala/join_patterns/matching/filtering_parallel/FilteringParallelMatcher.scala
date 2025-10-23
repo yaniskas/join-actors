@@ -2,19 +2,23 @@ package join_patterns.matching.filtering_parallel
 
 import join_actors.actor.*
 import join_patterns.matching.mixin.MutableMapMessageStore
-import join_patterns.matching.{CandidateMatchOpt, CandidateMatches, Matcher}
+import join_patterns.matching.CandidateMatchOpt
+import join_patterns.matching.CandidateMatches
+import join_patterns.matching.Matcher
+import join_patterns.matching.MatcherFactory
+import join_patterns.types.JoinDefinition
 import join_patterns.types.JoinPattern
 import join_patterns.util.*
 
 import scala.collection.mutable.{ArrayBuffer, HashMap as MutableHashMap}
 
-class FilteringParallelMatcher[M, T](private val patterns: List[JoinPattern[M, T]], numThreads: Int) extends Matcher[M, T], MutableMapMessageStore[M]:
+class FilteringParallelMatcher[M, T](private val patterns: JoinDefinition[M, T], numThreads: Int)
+    extends Matcher[M, T], MutableMapMessageStore[M]:
 
   private var nextMessageIndex = 0
 
   private val matchingTrees: List[FilteringParallelMatchingTree[M, T]] =
     patterns.zipWithIndex.map(FilteringParallelMatchingTree(_, _, numThreads))
-
 
   def apply(q: Mailbox[M])(selfRef: ActorRef[M]): T =
     var result: Option[T] = None
@@ -42,11 +46,20 @@ class FilteringParallelMatcher[M, T](private val patterns: List[JoinPattern[M, T
         result = Some(rhsFn(substs, selfRef))
 
         // Prune tree
-        for tree <- matchingTrees.fast do
-          tree.pruneTree(candidateQidxs)
+        for tree <- matchingTrees.fast do tree.pruneTree(candidateQidxs)
 
         // Remove selected message indices from messages
-        for idx <- candidateQidxs.fast do
-          messages.remove(idx)
+        for idx <- candidateQidxs.fast do messages.remove(idx)
 
     result.get
+
+object FilteringParallelMatcher:
+  def apply(numThreads: Int): MatcherFactory = new MatcherFactory:
+    override def apply[M, T]: JoinDefinition[M, T] => Matcher[M, T] =
+      (joinDefinition: JoinDefinition[M, T]) =>
+        new FilteringParallelMatcher(joinDefinition, numThreads)
+
+    override def toString(): String =
+      s"FilteringParallelMatcher with $numThreads threads"
+
+  def apply(): MatcherFactory = apply(numThreads = Runtime.getRuntime().availableProcessors())

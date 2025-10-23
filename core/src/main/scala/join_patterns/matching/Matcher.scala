@@ -1,22 +1,11 @@
 package join_patterns.matching
 
 import join_actors.actor.*
-import join_patterns.matching.array_parallel.ArrayParallelMatcher
-import join_patterns.matching.array_while.ArrayWhileMatcher
-import join_patterns.matching.brute_force.BruteForceMatcher
-import join_patterns.matching.eager_parallel.EagerParallelMatcher
-import join_patterns.matching.filtering_parallel.FilteringParallelMatcher
-import join_patterns.matching.filtering_while.FilteringWhileMatcher
-import join_patterns.matching.while_eager.WhileEagerMatcher
-import join_patterns.matching.immutable.StatefulTreeMatcher
-import join_patterns.matching.lazy_mutable.LazyMutableMatcher
-import join_patterns.matching.lazy_parallel.LazyParallelMatcher
-import join_patterns.matching.mutable.MutableStatefulMatcher
-import join_patterns.matching.while_lazy.WhileLazyMatcher
 import join_patterns.types.*
 
 import scala.Console
-import scala.collection.immutable.{ArraySeq, TreeMap}
+import scala.collection.immutable.ArraySeq
+import scala.collection.immutable.TreeMap
 
 type RHSFnClosure[M, T] = (LookupEnv, ActorRef[M]) => T
 
@@ -59,7 +48,7 @@ object CandidateMatches:
   private val defaultSeqOrderingForMessageIdxs = seqOrdering[ArraySeq, Int]
 
   def apply[M, T](): CandidateMatches[M, T] =
-    TreeMap[MatchIdxs, (LookupEnv, RHSFnClosure[M, T])]()(
+    TreeMap[MatchIdxs, (LookupEnv, RHSFnClosure[M, T])]()(using
       Ordering.Tuple2[MessageIdxs, PatternIdx](using defaultSeqOrderingForMessageIdxs)
     )
 
@@ -85,10 +74,8 @@ object CandidateMatches:
 
 /** A matcher trait the defines the interface for a join pattern matcher.
   *
-  * @tparam M
-  *   The type of messages in the queue.
-  * @tparam T
-  *   The type of the RHS of the join pattern.
+  * @tparam M the message type that the matcher will process
+  * @tparam T the result type produced by successful pattern matching
   */
 trait Matcher[M, +T]:
 
@@ -96,7 +83,8 @@ trait Matcher[M, +T]:
     * the join pattern.
     *
     * @param q
-    *   The mailbox containing the messages.
+    *   The mailbox where messages sent to the actor are queued. This is an alias for the
+    *   `LinkedTransferQueue[M]` data structure.
     * @param selfRef
     *   The actor reference where the matcher is used
     * @return
@@ -106,19 +94,14 @@ trait Matcher[M, +T]:
 
   def storedMessages: IterableOnce[M]
 
-object SelectMatcher:
-  import MatchingAlgorithm.*
-  def apply[M, T](algorithm: MatchingAlgorithm, patterns: List[JoinPattern[M, T]]): Matcher[M, T] =
-    algorithm match
-      case BruteForceAlgorithm        => BruteForceMatcher(patterns)
-      case StatefulTreeBasedAlgorithm => StatefulTreeMatcher(patterns)
-      case MutableStatefulAlgorithm   => MutableStatefulMatcher(patterns)
-      case LazyMutableAlgorithm       => LazyMutableMatcher(patterns)
-      case WhileLazyAlgorithm         => WhileLazyMatcher(patterns)
-      case FilteringWhileAlgorithm    => FilteringWhileMatcher(patterns)
-      case WhileEagerAlgorithm        => WhileEagerMatcher(patterns)
-      case EagerParallelAlgorithm(numThreads)     => EagerParallelMatcher(patterns, numThreads)
-      case LazyParallelAlgorithm(numThreads)      => LazyParallelMatcher(patterns, numThreads)
-      case FilteringParallelAlgorithm(numThreads) => FilteringParallelMatcher(patterns, numThreads)
-      case ArrayWhileAlgorithm => ArrayWhileMatcher(patterns)
-      case ArrayParallelAlgorithm(numThreads) => ArrayParallelMatcher(patterns, numThreads)
+/**
+ * Factory trait for creating Matcher instances.
+ *
+ * A MatcherFactory provides a way to create matchers that can process join definitions
+ * and determine how to match incoming messages against join patterns.
+ *
+ * @tparam M the message type that the matcher will process
+ * @tparam T the result type produced by successful pattern matching
+ */
+trait MatcherFactory:
+  def apply[M, T]: JoinDefinition[M, T] => Matcher[M, T]

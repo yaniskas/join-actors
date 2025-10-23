@@ -615,25 +615,24 @@ private def getJoinDefinition[M, T](
   *   a matcher instance.
   */
 private def receiveCodegen[M, T](
-    expr: Expr[ActorRef[M] => PartialFunction[Any, Result[M, T]]]
-)(using
+    jpsExpr: Expr[ActorRef[M] => PartialFunction[Any, Result[M, T]]]
+)(matcherConstructor: Expr[MatcherFactory])(using
     tm: Type[M],
     tt: Type[T],
     quotes: Quotes
-): Expr[MatchingAlgorithm => Matcher[M, Result[M, T]]] =
-  import quotes.reflect.*
+): Expr[Matcher[M, Result[T]]] =
 
-  '{ (algorithm: MatchingAlgorithm) =>
-    SelectMatcher[M, Result[M, T]](
-      algorithm,
+  '{
+    val jps: JoinDefinition[M, Result[M, T]] =
       ${
         Expr.ofList(
-          getJoinDefinition(
-            expr.asInstanceOf[Expr[ActorRef[M] => PartialFunction[Any, Result[M, T]]]]
-          )
-        )
-      }
-    )
+      getJoinDefinition(
+        jpsExpr.asInstanceOf[Expr[ActorRef[M] => PartialFunction[Any, Result[M, T]]]]
+      )
+      )}
+
+    val matcher = (${ matcherConstructor }.apply[M, Result[M, T]])(jps)
+    matcher
   }
 
 /** Entry point of the `receive` macro.
@@ -641,10 +640,11 @@ private def receiveCodegen[M, T](
   * @param f
   *   the block to use as source of the pattern-matching code.
   * @return
-  *   a compile-time closure that takes a MatchingAlgorithm type and returns a Matcher-object that
-  *   performs pattern-matching on a message queue at runtime.
+  *   a compile-time closure that takes a MatcherFactory type that instantiates a
+  *   matcher and returns a Matcher-object that performs pattern-matching on a
+  *   message queue at runtime.
   */
 inline def receive[M, T](
     inline f: (ActorRef[M] => PartialFunction[Any, Result[M, T]])
-): MatchingAlgorithm => Matcher[M, Result[M, T]] =
-  ${ receiveCodegen('f) }
+)(inline createMatcher: MatcherFactory): Matcher[M, Result[M, T]] =
+  ${ receiveCodeGen('f)('createMatcher) }

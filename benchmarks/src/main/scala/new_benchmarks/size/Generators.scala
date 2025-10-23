@@ -19,7 +19,7 @@ enum SizeMsg:
 
 import SizeMsg.*
 
-def size1(algorithm: MatchingAlgorithm) =
+def size1(matcher: MatcherFactory) =
   var matches = 0
   Actor {
     receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
@@ -30,10 +30,10 @@ def size1(algorithm: MatchingAlgorithm) =
       case Terminate() =>
         Stop((System.currentTimeMillis(), matches))
     }
-    }(algorithm)
+    }(matcher)
   }
 
-def size2(algorithm: MatchingAlgorithm) =
+def size2(matcher: MatcherFactory) =
   var matches = 0
   Actor {
     receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
@@ -44,10 +44,10 @@ def size2(algorithm: MatchingAlgorithm) =
       case Terminate() =>
         Stop((System.currentTimeMillis(), matches))
     }
-    }(algorithm)
+    }(matcher)
   }
 
-def size3(algorithm: MatchingAlgorithm) =
+def size3(matcher: MatcherFactory) =
   var matches = 0
   Actor {
     receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
@@ -58,10 +58,10 @@ def size3(algorithm: MatchingAlgorithm) =
       case Terminate() =>
         Stop((System.currentTimeMillis(), matches))
     }
-    }(algorithm)
+    }(matcher)
   }
 
-def size4(algorithm: MatchingAlgorithm) =
+def size4(matcher: MatcherFactory) =
   var matches = 0
   Actor {
     receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
@@ -72,10 +72,10 @@ def size4(algorithm: MatchingAlgorithm) =
       case Terminate() =>
         Stop((System.currentTimeMillis(), matches))
     }
-    }(algorithm)
+    }(matcher)
   }
 
-def size5(algorithm: MatchingAlgorithm) =
+def size5(matcher: MatcherFactory) =
   var matches = 0
   Actor {
     receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
@@ -86,10 +86,10 @@ def size5(algorithm: MatchingAlgorithm) =
       case Terminate() =>
         Stop((System.currentTimeMillis(), matches))
     }
-    }(algorithm)
+    }(matcher)
   }
 
-def size6(algorithm: MatchingAlgorithm) =
+def size6(matcher: MatcherFactory) =
   var matches = 0
   Actor {
     receive[SizeMsg, (Long, Int)] { (_: ActorRef[SizeMsg]) =>
@@ -100,7 +100,7 @@ def size6(algorithm: MatchingAlgorithm) =
       case Terminate() =>
         Stop((System.currentTimeMillis(), matches))
     }
-    }(algorithm)
+    }(matcher)
   }
 
 def generateSizeMsgs(n: Int): Vector[SizeMsg] =
@@ -108,10 +108,10 @@ def generateSizeMsgs(n: Int): Vector[SizeMsg] =
   msgs.take(n)
 
 def genMsgsNoPayloadWithNoise(patSize: Int)(nRandomMsgs: Int)(genMsg: Int => Vector[SizeMsg])(
-  matches: Int
+    matches: Int
 ) =
-  val noise             = Vector.fill(nRandomMsgs)(XX())
-  val correctMsgs       = genMsg(patSize)
+  val noise = Vector.fill(nRandomMsgs)(XX())
+  val correctMsgs = genMsg(patSize)
   val matchSeqWithNoise = intercalateCorrectMsgs(correctMsgs, noise)
   Vector.fill(matches)(matchSeqWithNoise).flatten
 

@@ -620,14 +620,14 @@ private def receiveCodegen[M, T](
     tm: Type[M],
     tt: Type[T],
     quotes: Quotes
-): Expr[Matcher[M, Result[T]]] =
+): Expr[Matcher[M, Result[M, T]]] =
 
   '{
     val jps: JoinDefinition[M, Result[M, T]] =
       ${
         Expr.ofList(
       getJoinDefinition(
-        jpsExpr.asInstanceOf[Expr[ActorRef[M] => PartialFunction[Any, Result[M, T]]]]
+        jpsExpr
       )
       )}
 
@@ -647,4 +647,4 @@ private def receiveCodegen[M, T](
 inline def receive[M, T](
     inline f: (ActorRef[M] => PartialFunction[Any, Result[M, T]])
 )(inline createMatcher: MatcherFactory): Matcher[M, Result[M, T]] =
-  ${ receiveCodeGen('f)('createMatcher) }
+  ${ receiveCodegen('f)('createMatcher) }

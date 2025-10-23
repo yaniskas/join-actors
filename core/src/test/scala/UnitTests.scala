@@ -1,7 +1,6 @@
 package test
 
 import join_actors.api.*
-import join_actors.api.MatchingAlgorithm.*
 import join_patterns.matching.Matcher
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers.*
@@ -43,25 +42,6 @@ enum MsgWithMatcher:
   case MMatcher(matcher: Matcher[MsgWithMatcher, Result[MsgWithMatcher, Boolean]])
 
 import MsgWithMatcher.*
-
-implicit val ec: ExecutionContext =
-  ExecutionContext.fromExecutorService(Executors.newVirtualThreadPerTaskExecutor())
-
-val matchingAlgos = Table(
-  "MatchingAlgorithm",
-  BruteForceAlgorithm,
-  StatefulTreeBasedAlgorithm,
-  MutableStatefulAlgorithm,
-  LazyMutableAlgorithm,
-  WhileLazyAlgorithm,
-  FilteringWhileAlgorithm,
-  WhileEagerAlgorithm,
-  EagerParallelAlgorithm(2),
-  LazyParallelAlgorithm(2),
-  FilteringParallelAlgorithm(2),
-  ArrayWhileAlgorithm,
-  ArrayParallelAlgorithm(2)
-)
 
 class SingletonPatterns extends AnyFunSuite:
   test("Single Empty Message, no Predicate") {
@@ -815,18 +795,18 @@ class DynamicPatterns extends AnyFunSuite:
   test("Basic pattern switch") {
     val msgs = List(M1(), M2())
 
-    forAll(matchingAlgos) { algorithm =>
+    forAll(matchers) { matcher =>
       val matcher2 =
         receive[MsgPlain, Boolean] { (_) => {
           case M2() => Stop(true)
-        }}(algorithm)
+        }}(matcher)
 
       val matcher1 =
         receive[MsgPlain, Boolean] { (_) => {
           case M1() => Switch(matcher2)
           case M2() => Stop(false)
         }
-        }(algorithm)
+        }(matcher)
 
       val actor = Actor(matcher1)
 
@@ -843,18 +823,18 @@ class DynamicPatterns extends AnyFunSuite:
   test("Match on pre-switch message") {
     val msgs = List(M1(), M2())
 
-    forAll(matchingAlgos) { algorithm =>
+    forAll(matchers) { matcher =>
       val matcher2 =
         receive[MsgPlain, Boolean] { (_) => {
           case M1() => Stop(true)
         }
-        }(algorithm)
+        }(matcher)
 
       val matcher1 =
         receive[MsgPlain, Boolean] { (_) => {
           case M2() => Switch(matcher2)
         }
-        }(algorithm)
+        }(matcher)
 
       val actor = Actor(matcher1)
 
@@ -871,24 +851,24 @@ class DynamicPatterns extends AnyFunSuite:
   test("Match on pre-double switch message") {
     val msgs = List(M1(), M2(), M3())
 
-    forAll(matchingAlgos) { algorithm =>
+    forAll(matchers) { matcher =>
       val matcher3 =
         receive[MsgPlain, Boolean] { (_) => {
           case M1() => Stop(true)
         }
-        }(algorithm)
+        }(matcher)
 
       val matcher2 =
         receive[MsgPlain, Boolean] { (_) => {
           case M2() => Switch(matcher3)
         }
-        }(algorithm)
+        }(matcher)
 
       val matcher1 =
         receive[MsgPlain, Boolean] { (_) => {
           case M3() => Switch(matcher2)
         }
-        }(algorithm)
+        }(matcher)
 
       val actor = Actor(matcher1)
 
@@ -905,18 +885,18 @@ class DynamicPatterns extends AnyFunSuite:
   test("Match on pre-switch message and post-switch message") {
     val msgs = List(M1(), M2(), M3())
 
-    forAll(matchingAlgos) { algorithm =>
+    forAll(matchers) { matcher =>
       val matcher2 =
         receive[MsgPlain, Boolean] { (_) => {
           case M1() &:& M3() => Stop(true)
         }
-        }(algorithm)
+        }(matcher)
 
       val matcher1 =
         receive[MsgPlain, Boolean] { (_) => {
           case M2() => Switch(matcher2)
         }
-        }(algorithm)
+        }(matcher)
 
       val actor = Actor(matcher1)
 
@@ -933,20 +913,20 @@ class DynamicPatterns extends AnyFunSuite:
   test("Switch and switch back") {
     val msgs = List(M1(), M2(), M3())
 
-    forAll(matchingAlgos) { algorithm =>
+    forAll(matchers) { matcher =>
       lazy val matcher1: Matcher[MsgPlain, Result[MsgPlain, Boolean]] =
         receive[MsgPlain, Boolean] { (_) => {
           case M1() => Switch(matcher2)
           case M2() => Stop(false)
           case M3() => Stop(true)
         }
-        }(algorithm)
+        }(matcher)
 
       lazy val matcher2: Matcher[MsgPlain, Result[MsgPlain, Boolean]] =
         receive[MsgPlain, Boolean] { (_) => {
           case M2() => Switch(matcher1)
         }
-        }(algorithm)
+        }(matcher)
 
       val actor = Actor(matcher1)
 
@@ -961,13 +941,13 @@ class DynamicPatterns extends AnyFunSuite:
   }
 
   test("Matcher in payload") {
-    forAll(matchingAlgos) { algorithm =>
+    forAll(matchers) { matcher =>
 
       val matcherInPayload =
         receive[MsgWithMatcher, Boolean] { (_) => {
           case MM1() => Stop(true)
         }
-        }(algorithm)
+        }(matcher)
 
       val msgs = List(MMatcher(matcherInPayload), MM1())
 
@@ -976,7 +956,7 @@ class DynamicPatterns extends AnyFunSuite:
           case MMatcher(payloadMatcher) => Switch(payloadMatcher)
           case MM1() => Stop(false)
         }
-        }(algorithm)
+        }(matcher)
 
       val actor = Actor(matcher1)
 

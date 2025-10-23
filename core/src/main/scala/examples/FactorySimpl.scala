@@ -29,7 +29,7 @@ import MachineEvent.*
 import WorkerEvent.*
 import SystemEvent.*
 
-def monitor(algorithm: MatcherFactory) =
+def monitor(matcher: MatcherFactory) =
   Actor {
     receive[Event, Unit] { (self: ActorRef[Event]) =>
       {

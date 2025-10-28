@@ -4,8 +4,7 @@ import join_actors.actor.*
 import join_patterns.types.*
 
 import scala.Console
-import scala.collection.immutable.ArraySeq
-import scala.collection.immutable.TreeMap
+import scala.collection.immutable.{ArraySeq, BitSet, TreeMap}
 
 type RHSFnClosure[M, T] = (LookupEnv, ActorRef[M]) => T
 
@@ -44,12 +43,15 @@ type CandidateMatches[M, T] =
   TreeMap[MatchIdxs, (LookupEnv, RHSFnClosure[M, T])]
 
 object CandidateMatches:
-  import math.Ordering.Implicits.seqOrdering
-  private val defaultSeqOrderingForMessageIdxs = seqOrdering[ArraySeq, Int]
+  import math.Ordering.Implicits.*
+//  private val defaultSeqOrderingForMessageIdxs = seqOrdering[BitSet, Int]
+  private val defaultOrderingForBitSet = new Ordering[BitSet]:
+    def compare(x: BitSet, y: BitSet): Int =
+      x.iterator.zip(y.iterator).find((a, b) => a != b).map((a, b) => Integer.compare(a, b)).getOrElse(0)
 
   def apply[M, T](): CandidateMatches[M, T] =
     TreeMap[MatchIdxs, (LookupEnv, RHSFnClosure[M, T])]()(using
-      Ordering.Tuple2[MessageIdxs, PatternIdx](using defaultSeqOrderingForMessageIdxs)
+      Ordering.Tuple2[MessageIdxs, PatternIdx](using defaultOrderingForBitSet)
     )
 
   def logCandidateMatches[M, T](candidateMatches: CandidateMatches[M, T]): Unit =

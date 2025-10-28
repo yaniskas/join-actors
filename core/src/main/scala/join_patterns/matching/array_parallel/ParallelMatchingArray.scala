@@ -153,7 +153,7 @@ class ParallelMatchingArray[M, T](private val pattern: JoinPattern[M, T], privat
         val v1 = arr1(i1)
         val v2 = arr2(i2)
 
-        val comp = sizeBiasedOrdering.compare(v1._1, v2._1)
+        val comp = bitSetOrdering.compare(v1._1, v2._1)
 
         if comp <= 0 then
           res(ires) = v1

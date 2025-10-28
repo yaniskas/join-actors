@@ -99,7 +99,7 @@ def findFairestMatch[M, T](
       true
     else false
   }
-  if bestMatchIdxs != null && bestMatchSubsts != null then Some((bestMatchIdxs.sorted, bestMatchSubsts))
+  if bestMatchIdxs != null && bestMatchSubsts != null then Some((bestMatchIdxs, bestMatchSubsts))
   else None
 
 /** Removes processed messages from the mailbox.

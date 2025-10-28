@@ -28,7 +28,7 @@ class WhileLazyMatchingTree[M, T](private val pattern: JoinPattern[M, T], privat
     else
       val additions = ArrayBuffer[(MessageIdxs, PatternBins)]()
 
-      val res = boundary:
+      val res: Option[(MessageIdxs, LookupEnv)] = boundary:
         for (messageIdxsMatched, bins) <- nodes.fast do
           // Create the child for one leaf in the matching tree
           // If the PatternBins contains a key for the constructor type of the new message, we might be able to compute a child

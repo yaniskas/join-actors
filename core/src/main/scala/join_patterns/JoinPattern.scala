@@ -2,22 +2,29 @@ package join_patterns.types
 
 import join_actors.actor.ActorRef
 
+import scala.annotation.targetName
 import scala.collection.Factory
-import scala.collection.immutable.ArraySeq
-import scala.collection.immutable.TreeMap
+import scala.collection.immutable.{ArraySeq, BitSet, TreeMap}
 import scala.collection.mutable.Builder
 
 type MessageIdx = Int
 
-type MessageIdxs = ArraySeq[MessageIdx]
+type MessageIdxs = BitSet
 object MessageIdxs extends Factory[MessageIdx, MessageIdxs]:
-  def apply(elems: MessageIdx*): MessageIdxs = ArraySeq(elems*)
+  def apply(elems: MessageIdx*): MessageIdxs = BitSet(elems*)
 
   def fromSpecific(it: IterableOnce[MessageIdx]): MessageIdxs =
-    it.iterator.to(ArraySeq)
+    it.iterator.to(BitSet)
 
-  def newBuilder: Builder[MessageIdx, MessageIdxs] =
-    ArraySeq.newBuilder[MessageIdx]
+  def newBuilder: Builder[MessageIdx, MessageIdxs] = BitSet.newBuilder
+
+extension (bitset: BitSet)
+  @targetName("colonPlus")
+  inline infix def :+(e: Int): BitSet = bitset.incl(e)
+
+  def combinations(i: Int): Iterator[ArraySeq[MessageIdx]] = bitset.to(ArraySeq).combinations(i)
+  
+  
 
 type PatternIdx = Int
 
@@ -30,6 +37,22 @@ object PatternIdxs extends Factory[PatternIdx, PatternIdxs]:
 
   def newBuilder: Builder[PatternIdx, PatternIdxs] =
     ArraySeq.newBuilder[PatternIdx]
+
+given bitSetOrdering: Ordering[BitSet] with
+  def compare(x: BitSet, y: BitSet): Int =
+    val sizeComp = Integer.compare(x.size, y.size) // compare by size first
+    if sizeComp != 0 then -sizeComp // if sizes are different, return the comparison result
+    else
+      x.iterator.zip(y.iterator).find((a, b) => a != b).map((a, b) => Integer.compare(a, b)).getOrElse(0)
+
+//      var acc = 0
+//      var i = 0
+//      while i < x.size && i < y.size && acc == 0 do
+//        val a = x(i)
+//        val b = y(i)
+//        if a != b then acc = Integer.compare(a, b)
+//        i += 1
+//      acc
 
 given sizeBiasedOrdering: Ordering[ArraySeq[PatternIdx]] with
   def compare(x: ArraySeq[PatternIdx], y: ArraySeq[PatternIdx]): Int =

@@ -2,6 +2,7 @@ package join_patterns.matching
 
 import join_actors.actor.*
 import join_patterns.types.*
+import join_patterns.util.OffsetBitSet
 
 import scala.Console
 import scala.collection.immutable.{ArraySeq, BitSet, TreeMap}
@@ -45,8 +46,8 @@ type CandidateMatches[M, T] =
 object CandidateMatches:
   import math.Ordering.Implicits.*
 //  private val defaultSeqOrderingForMessageIdxs = seqOrdering[BitSet, Int]
-  private val defaultOrderingForBitSet = new Ordering[BitSet]:
-    def compare(x: BitSet, y: BitSet): Int =
+  private val defaultOrderingForBitSet = new Ordering[OffsetBitSet]:
+    def compare(x: OffsetBitSet, y: OffsetBitSet): Int =
       x.iterator.zip(y.iterator).find((a, b) => a != b).map((a, b) => Integer.compare(a, b)).getOrElse(0)
 
   def apply[M, T](): CandidateMatches[M, T] =

@@ -1,6 +1,7 @@
 package join_patterns.types
 
 import join_actors.actor.ActorRef
+import join_patterns.util.OffsetBitSet
 
 import scala.annotation.targetName
 import scala.collection.Factory
@@ -9,22 +10,23 @@ import scala.collection.mutable.Builder
 
 type MessageIdx = Int
 
-type MessageIdxs = BitSet
+type MessageIdxs = OffsetBitSet
+
 object MessageIdxs extends Factory[MessageIdx, MessageIdxs]:
-  def apply(elems: MessageIdx*): MessageIdxs = BitSet(elems*)
+  def apply(elems: MessageIdx*): MessageIdxs = OffsetBitSet(elems *)
 
   def fromSpecific(it: IterableOnce[MessageIdx]): MessageIdxs =
-    it.iterator.to(BitSet)
+    it.iterator.to(OffsetBitSet)
 
-  def newBuilder: Builder[MessageIdx, MessageIdxs] = BitSet.newBuilder
+  def newBuilder: Builder[MessageIdx, MessageIdxs] = OffsetBitSet.newBuilder
 
-extension (bitset: BitSet)
+extension (bitset: OffsetBitSet)
   @targetName("colonPlus")
-  inline infix def :+(e: Int): BitSet = bitset.incl(e)
+  inline infix def :+(e: Int): OffsetBitSet = bitset.incl(e)
 
   def combinations(i: Int): Iterator[ArraySeq[MessageIdx]] = bitset.to(ArraySeq).combinations(i)
   
-  
+
 
 type PatternIdx = Int
 
@@ -38,8 +40,8 @@ object PatternIdxs extends Factory[PatternIdx, PatternIdxs]:
   def newBuilder: Builder[PatternIdx, PatternIdxs] =
     ArraySeq.newBuilder[PatternIdx]
 
-given bitSetOrdering: Ordering[BitSet] with
-  def compare(x: BitSet, y: BitSet): Int =
+given bitSetOrdering: Ordering[OffsetBitSet] with
+  def compare(x: OffsetBitSet, y: OffsetBitSet): Int =
     val sizeComp = Integer.compare(x.size, y.size) // compare by size first
     if sizeComp != 0 then -sizeComp // if sizes are different, return the comparison result
     else

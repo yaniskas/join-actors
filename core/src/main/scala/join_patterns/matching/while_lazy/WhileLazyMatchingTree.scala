@@ -60,6 +60,8 @@ class WhileLazyMatchingTree[M, T](private val pattern: JoinPattern[M, T], privat
 
       res match
         case Some((bestMatchIdxs, bestMatchSubsts)) =>
+//          println(bestMatchIdxs)
+
           val selectedMatch =
             (
                     bestMatchSubsts,

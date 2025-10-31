@@ -24,7 +24,7 @@ extension (bitset: OffsetBitSet)
   @targetName("colonPlus")
   inline infix def :+(e: Int): OffsetBitSet = bitset.incl(e)
 
-  def combinations(i: Int): Iterator[ArraySeq[MessageIdx]] = bitset.to(ArraySeq).combinations(i)
+  def combinations(i: Int): Iterator[ArraySeq[MessageIdx]] = bitset.toArraySeqFast.combinations(i)
   
 
 

@@ -44,8 +44,8 @@ given bitSetOrdering: Ordering[OffsetBitSet] with
   def compare(x: OffsetBitSet, y: OffsetBitSet): Int =
     val sizeComp = Integer.compare(x.size, y.size) // compare by size first
     if sizeComp != 0 then -sizeComp // if sizes are different, return the comparison result
-    else
-      x.iterator.zip(y.iterator).find((a, b) => a != b).map((a, b) => Integer.compare(a, b)).getOrElse(0)
+    else if x.minElement != y.minElement then Integer.compare(x.minElement, y.minElement)
+    else x.iterator.zip(y.iterator).find((a, b) => a != b).map((a, b) => Integer.compare(a, b)).getOrElse(0)
 
 //      var acc = 0
 //      var i = 0

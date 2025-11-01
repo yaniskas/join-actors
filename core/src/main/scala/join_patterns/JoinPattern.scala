@@ -11,6 +11,7 @@ import scala.collection.mutable.Builder
 type MessageIdx = Int
 
 type MessageIdxs = OffsetBitSet
+type MatchResultSeq = List[Int]
 
 object MessageIdxs extends Factory[MessageIdx, MessageIdxs]:
   def apply(elems: MessageIdx*): MessageIdxs = OffsetBitSet(elems *)
@@ -24,7 +25,7 @@ extension (bitset: OffsetBitSet)
   @targetName("colonPlus")
   inline infix def :+(e: Int): OffsetBitSet = bitset.incl(e)
 
-  def combinations(i: Int): Iterator[ArraySeq[MessageIdx]] = bitset.toArraySeqFast.combinations(i)
+  def combinations(i: Int): Iterator[ArraySeq[MessageIdx]] = bitset.to(ArraySeq).combinations(i)
   
 
 

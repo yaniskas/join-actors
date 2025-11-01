@@ -28,7 +28,7 @@ class WhileLazyMatchingTree[M, T](private val pattern: JoinPattern[M, T], privat
     else
       val additions = ArrayBuffer[(MessageIdxs, PatternBins)]()
 
-      val res: Option[(MessageIdxs, LookupEnv)] = boundary:
+      val res: Option[(MatchResultSeq, LookupEnv)] = boundary:
         for (messageIdxsMatched, bins) <- nodes.fast do
           // Create the child for one leaf in the matching tree
           // If the PatternBins contains a key for the constructor type of the new message, we might be able to compute a child
@@ -77,12 +77,12 @@ class WhileLazyMatchingTree[M, T](private val pattern: JoinPattern[M, T], privat
   def findMatch(index: Int, msg: M, messages: MutableMap[Int, M]): CandidateMatchOpt[M, T] =
     updateTree(index, msg, messages)
 
-  private def findBestValidPermutation(patternBins: PatternBins, messages: MutableMap[Int, M]): Option[(MessageIdxs, LookupEnv)] =
+  private def findBestValidPermutation(patternBins: PatternBins, messages: MutableMap[Int, M]): Option[(MatchResultSeq, LookupEnv)] =
     val validPermutations =
       getMsgIdxsWithPayloadExtractor(patternExtractors, patternBins)
     val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern)
     bestMatchOpt
 
-  def pruneTree(messageIdxsToRemove: MessageIdxs): Unit =
+  def pruneTree(messageIdxsToRemove: MatchResultSeq): Unit =
     nodes.filterInPlace: (messageIdxs, _) =>
       messageIdxsToRemove.forall(i => !messageIdxs.contains(i))

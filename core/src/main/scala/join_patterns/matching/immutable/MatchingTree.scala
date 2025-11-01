@@ -47,7 +47,7 @@ def updateMTree(
       case Some(updatedPatternBins) => acc.updated(messageIdxs :+ messageIdx, updatedPatternBins)
   }
 
-def pruneTree(mtree: MatchingTree, messageIdxsToRemove: MessageIdxs): MatchingTree =
+def pruneTree(mtree: MatchingTree, messageIdxsToRemove: IterableOnce[Int]): MatchingTree =
   mtree.view
     .filterKeys { case messageIdxs =>
       messageIdxsToRemove.forall(i => !messageIdxs.contains(i))

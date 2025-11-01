@@ -67,16 +67,16 @@ class MutableStatefulMatchingTree[M, T](private val pattern: JoinPattern[M, T], 
             (substs: LookupEnv, self: ActorRef[M]) => pattern.rhs(substs, self)
           )
 
-        completePatterns.remove(bestMatchIdxs)
-        nodes.subtractAll(completePatterns.keySet)
+        completePatterns.remove(bestMatchIdxs.to(MessageIdxs))
+        nodes.subtractAll(completePatterns.keySet.map(_.to(MessageIdxs)))
 
         Some((bestMatchIdxs, patternIdx), selectedMatch)
       case None =>
         for k <- completePatterns.keySet do
-          nodes.remove(k)
+          nodes.remove(k.to(MessageIdxs))
 
         None
 
-  def pruneTree(messageIdxsToRemove: MessageIdxs): Unit =
+  def pruneTree(messageIdxsToRemove: MatchResultSeq): Unit =
     nodes.filterInPlace: (messageIdxs, _) =>
       messageIdxsToRemove.forall(i => !messageIdxs.contains(i))

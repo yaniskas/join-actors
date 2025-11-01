@@ -69,7 +69,7 @@ class WhileEagerMatchingTree[M, T](private val pattern: JoinPattern[M, T], priva
             (substs: LookupEnv, self: ActorRef[M]) => pattern.rhs(substs, self)
           )
 
-        completePatterns.remove(bestMatchIdxs)
+        completePatterns.remove(bestMatchIdxs.to(MessageIdxs))
         nodes.subtractAll(completePatterns.keySet)
 
         Some((bestMatchIdxs, patternIdx), selectedMatch)
@@ -79,6 +79,6 @@ class WhileEagerMatchingTree[M, T](private val pattern: JoinPattern[M, T], priva
 
         None
 
-  def pruneTree(messageIdxsToRemove: MessageIdxs): Unit =
+  def pruneTree(messageIdxsToRemove: MatchResultSeq): Unit =
     nodes.filterInPlace: (messageIdxs, _) =>
       messageIdxsToRemove.forall(i => !messageIdxs.contains(i))

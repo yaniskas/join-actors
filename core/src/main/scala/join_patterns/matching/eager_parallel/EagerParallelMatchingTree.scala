@@ -103,7 +103,7 @@ class EagerParallelMatchingTree[M, T](private val pattern: JoinPattern[M, T], pr
             (substs: LookupEnv, self: ActorRef[M]) => pattern.rhs(substs, self)
           )
 
-        completePatterns.remove(bestMatchIdxs)
+        completePatterns.remove(bestMatchIdxs.to(MessageIdxs))
         nodes.asScala.subtractAll(completePatterns.keySet)
 
         Some((bestMatchIdxs, patternIdx), selectedMatch)
@@ -113,6 +113,6 @@ class EagerParallelMatchingTree[M, T](private val pattern: JoinPattern[M, T], pr
 
         None
 
-  def pruneTree(messageIdxsToRemove: MessageIdxs): Unit =
+  def pruneTree(messageIdxsToRemove: MatchResultSeq): Unit =
     nodes.keySet().removeIf: messageIdxs =>
       messageIdxsToRemove.exists(i => messageIdxs.contains(i))

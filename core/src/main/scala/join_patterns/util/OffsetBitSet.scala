@@ -20,16 +20,6 @@ class OffsetBitSet(val minElement: Int, val underlying: BitSet, override val siz
 
   override def toString(): String = underlying.toString()
 
-  def toArraySeqFast: ArraySeq[Int] =
-    val array = underlying.toArray
-
-    var i = 0
-    while i < array.length do
-      array(i) += minElement
-      i += 1
-
-    ArraySeq.ofInt(array)
-
   def compareFirstDifferent(other: OffsetBitSet): Int =
     // Inspired by https://stackoverflow.com/questions/27331175/java-bitset-comparison
 

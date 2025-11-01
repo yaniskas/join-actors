@@ -130,13 +130,13 @@ class ParallelMatchingArray[M, T](private val pattern: JoinPattern[M, T], privat
   def findMatch(index: Int, msg: M, messages: MutableMap[Int, M]): CandidateMatchOpt[M, T] =
     updateTree(index, msg, messages)
 
-  private def findBestValidPermutation(patternBins: PatternBins, messages: MutableMap[Int, M]): Option[(MessageIdxs, LookupEnv)] =
+  private def findBestValidPermutation(patternBins: PatternBins, messages: MutableMap[Int, M]): Option[(MatchResultSeq, LookupEnv)] =
     val validPermutations =
       getMsgIdxsWithPayloadExtractor(patternExtractors, patternBins)
     val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern)
     bestMatchOpt
 
-  def pruneTree(messageIdxsToRemove: MessageIdxs): Unit =
+  def pruneTree(messageIdxsToRemove: MatchResultSeq): Unit =
     nodes = nodes.filter: (messageIdxs, _) =>
       messageIdxsToRemove.forall(i => !messageIdxs.contains(i))
 

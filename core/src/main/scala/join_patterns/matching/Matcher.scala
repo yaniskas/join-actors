@@ -16,7 +16,7 @@ type RHSFnClosure[M, T] = (LookupEnv, ActorRef[M]) => T
   * @param patternIdx
   *   The index of the join pattern in the join defintion.
   */
-type MatchIdxs = (MessageIdxs, PatternIdx)
+type MatchIdxs = (MatchResultSeq, PatternIdx)
 
 /** A candidate match of a join pattern where the key is a sub-sequence of message indices that are
   * the fairest match for a join pattern and the value is a tuple of the substitutions and the RHS
@@ -46,13 +46,13 @@ type CandidateMatches[M, T] =
 object CandidateMatches:
   import math.Ordering.Implicits.*
 //  private val defaultSeqOrderingForMessageIdxs = seqOrdering[BitSet, Int]
-  private val defaultOrderingForBitSet = new Ordering[OffsetBitSet]:
-    def compare(x: OffsetBitSet, y: OffsetBitSet): Int =
+  private val defaultOrderingForBitSet = new Ordering[MatchResultSeq]:
+    def compare(x: MatchResultSeq, y: MatchResultSeq): Int =
       x.iterator.zip(y.iterator).find((a, b) => a != b).map((a, b) => Integer.compare(a, b)).getOrElse(0)
 
   def apply[M, T](): CandidateMatches[M, T] =
     TreeMap[MatchIdxs, (LookupEnv, RHSFnClosure[M, T])]()(using
-      Ordering.Tuple2[MessageIdxs, PatternIdx](using defaultOrderingForBitSet)
+      Ordering.Tuple2[MatchResultSeq, PatternIdx](using defaultOrderingForBitSet)
     )
 
   def logCandidateMatches[M, T](candidateMatches: CandidateMatches[M, T]): Unit =

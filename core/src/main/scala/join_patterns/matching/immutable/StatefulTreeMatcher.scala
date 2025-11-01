@@ -64,7 +64,7 @@ class StatefulTreeMatcher[M, T](private val patterns: JoinDefinition[M, T])
               )
 
             val removedNonMatchingNodes =
-              updatedMTree.removedAll(completePatterns.removed(bestMatchIdxs).keySet)
+              updatedMTree.removedAll(completePatterns.removed(bestMatchIdxs.to(MessageIdxs)).keySet)
 
             (
               ((pattern, patternIdx), (removedNonMatchingNodes, patInfo)),

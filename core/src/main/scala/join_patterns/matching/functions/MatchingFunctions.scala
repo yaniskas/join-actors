@@ -89,17 +89,17 @@ def findFairestMatch[M, T](
                             validPermutations: Iterator[List[(Int, M => LookupEnv)]],
                             messages: MutMap[Int, M],
                             pattern: JoinPattern[M, T]
-                          ): Option[(MessageIdxs, LookupEnv)] =
+                          ): Option[(MatchResultSeq, LookupEnv)] =
   var bestMatchSubsts: LookupEnv = null
-  var bestMatchIdxs: MessageIdxs = null
+  var bestMatchIdxs: MatchResultSeq = null
   validPermutations.find { possibleFit =>
     bestMatchSubsts = computeSubsts(messages, possibleFit)
     if pattern.guard(bestMatchSubsts) then
-      bestMatchIdxs = MessageIdxs(possibleFit.map(_._1)*)
+      bestMatchIdxs = possibleFit.map(_._1)
       true
     else false
   }
-  if bestMatchIdxs != null && bestMatchSubsts != null then Some((bestMatchIdxs, bestMatchSubsts))
+  if bestMatchIdxs != null && bestMatchSubsts != null then Some((bestMatchIdxs.sorted, bestMatchSubsts))
   else None
 
 /** Removes processed messages from the mailbox.

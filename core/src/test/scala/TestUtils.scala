@@ -1,6 +1,8 @@
 package test.utils
 
 import join_actors.api.*
+import join_patterns.matching.trie_rec.TrieRecMatcher
+import join_patterns.matching.trie_while.TrieWhileMatcher
 import org.scalatest.prop.TableDrivenPropertyChecks.Table
 
 val matchers = Table(
@@ -16,5 +18,7 @@ val matchers = Table(
   MutableStatefulMatcher,
   StatefulTreeMatcher,
   WhileEagerMatcher,
-  WhileLazyMatcher
+  WhileLazyMatcher,
+  TrieWhileMatcher,
+  TrieRecMatcher
 )

@@ -1,7 +1,8 @@
-package join_patterns.matching.filtering_while
+package join_patterns.matching.multiple_filtering
 
 import join_actors.actor.ActorRef
 import join_patterns.matching.CandidateMatchOpt
+import join_patterns.matching.multiple_filtering.MultipleFilteringMatchingTree.AdvancedFiltersWithState
 import join_patterns.matching.functions.*
 import join_patterns.types.{*, given}
 import join_patterns.util.*
@@ -11,10 +12,19 @@ import scala.collection.mutable.{ArrayBuffer, Map as MutableMap, TreeMap as Muta
 import scala.util.boundary
 import scala.util.boundary.break
 
-class FilteringWhileMatchingTree[M, T](private val pattern: JoinPattern[M, T], private val patternIdx: Int):
+class MultipleFilteringMatchingTree[M, T](private val pattern: JoinPattern[M, T], private val patternIdx: Int):
   private val patternExtractors = pattern.getPatternInfo.patternExtractors
 
-  private val nodes = MutableTreeMap[MessageIdxs, PatternBins](MessageIdxs() -> pattern.getPatternInfo.patternBins)
+  private val nodes =
+    val advancedFilters = pattern.getPatternInfo.advancedFilters
+    val advancedFiltersWithState =
+      advancedFilters.iterator.map: (pidxsSet, filter) =>
+        (pidxsSet.iterator.map(pidxs => (pidxs, false)).to(Map), filter)
+      .to(ArraySeq)
+
+    MutableTreeMap[MessageIdxs, (PatternBins, AdvancedFiltersWithState)](
+      MessageIdxs() -> (pattern.getPatternInfo.patternBins, advancedFiltersWithState)
+    )
 
 
   private def updateTree(newMessageIdx: Int, msg: M, messages: MutableMap[Int, M]): CandidateMatchOpt[M, T] =
@@ -36,10 +46,10 @@ class FilteringWhileMatchingTree[M, T](private val pattern: JoinPattern[M, T], p
 
     if matchingConstructorIdxs.isEmpty || !filterRes then None
     else
-      val additions = ArrayBuffer[(MessageIdxs, PatternBins)]()
+      val additions = ArrayBuffer[(MessageIdxs, (PatternBins, AdvancedFiltersWithState))]()
 
       val res = boundary:
-        for (messageIdxsMatched, bins) <- nodes.fast do
+        for (messageIdxsMatched, (bins, advancedFilterState)) <- nodes.fast do
           // Create the child for one leaf in the matching tree
           // If the PatternBins contains a key for the constructor type of the new message, we might be able to compute a child
           bins.get(matchingConstructorIdxs) match
@@ -50,7 +60,47 @@ class FilteringWhileMatchingTree[M, T](private val pattern: JoinPattern[M, T], p
                 val newMessageIdxs = messageIdxsMatched :+ newMessageIdx
                 val newPatternBins = bins.updated(matchingConstructorIdxs, mappedMessageIdxs :+ newMessageIdx)
 
-                if newMessageIdxs.size == pattern.size
+                val updatedFilters = ArrayBuffer[Int]()
+                val newAdvancedFilterState = advancedFilterState.zipWithIndex.map: (statesAndFilter, i) =>
+                  val (states, filter) = statesAndFilter
+                  val newStates = states.updatedWith(matchingConstructorIdxs):
+                    case Some(false) =>
+                      updatedFilters.append(i)
+                      Some(true)
+                    case None => None
+                    case Some(true) => throw IllegalStateException()
+
+                  (newStates, filter)
+
+                val allFiltersSatisfied = updatedFilters.forall: i =>
+                  val completionState = newAdvancedFilterState(i)._1
+
+                  if completionState.exists((pidxs, filled) => !filled) then true
+                  else
+                    val filterToCheck = newAdvancedFilterState(i)._2
+
+                    val lookupEnvForFilter =
+                      completionState.foldLeft(LookupEnv.empty): (acc, state) =>
+                        val (pidxs, _) = state
+
+                        val midxs = newPatternBins(pidxs)
+                        if pidxs.size != 1 then throw IllegalStateException()
+                        if midxs.size != 1 then throw IllegalStateException()
+                        else
+                          val pidx = pidxs.head
+                          val midx = midxs.head
+
+                          val lookupEnvExtractor = patternExtractors(pidx).lookupEnvExtractor
+                          val partialLookupEnv = lookupEnvExtractor(messages(midx))
+
+                          acc ++ partialLookupEnv
+
+                    filterToCheck(lookupEnvForFilter)
+
+
+                // If any of the advanced filters is not satisfied, we do not add the new node to the tree
+                if !allFiltersSatisfied then ()
+                else if newMessageIdxs.size == pattern.size
                         && newPatternBins.forall((patShapeSize, msgIdxs) => patShapeSize.size == msgIdxs.size)
                 then
                   // Find optimal permutation
@@ -63,7 +113,7 @@ class FilteringWhileMatchingTree[M, T](private val pattern: JoinPattern[M, T], p
                       break(r)
                     case None => ()
                 else
-                  val newNode = (newMessageIdxs, newPatternBins)
+                  val newNode = (newMessageIdxs, (newPatternBins, newAdvancedFilterState))
                   additions.append(newNode)
         // If the loop does not find any full nodes with a valid permutation, we do not have a result
         None
@@ -94,3 +144,6 @@ class FilteringWhileMatchingTree[M, T](private val pattern: JoinPattern[M, T], p
   def pruneTree(messageIdxsToRemove: MessageIdxs): Unit =
     nodes.filterInPlace: (messageIdxs, _) =>
       messageIdxsToRemove.forall(i => !messageIdxs.contains(i))
+
+object MultipleFilteringMatchingTree:
+  type AdvancedFiltersWithState = ArraySeq[(Map[PatternIdxs, Boolean], GuardFilter)]

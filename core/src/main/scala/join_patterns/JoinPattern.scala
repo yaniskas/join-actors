@@ -63,10 +63,12 @@ def ppPatternBins(patternBins: PatternBins): String =
     }
     .mkString(", ")
 
+type GuardFilter = LookupEnv => Boolean
+
 final case class PatternIdxInfo[M](
     msgTypeChecker: M => Boolean,
     lookupEnvExtractor: M => LookupEnv,
-    filterer: LookupEnv => Boolean
+    filterer: GuardFilter
 )
 
 type PatternExtractors[M] = Map[PatternIdx, PatternIdxInfo[M]]
@@ -82,10 +84,13 @@ def ppPatternExtractors[M, T](patternExtractors: PatternExtractors[M]): String =
     }
     .mkString(", ")
 
+type AdvancedFilters = Map[Set[PatternIdxs], GuardFilter]
+
 final case class PatternInfo[M](
     // Initial pattern bins
     patternBins: PatternBins,
-    patternExtractors: PatternExtractors[M]
+    patternExtractors: PatternExtractors[M],
+    advancedFilters: AdvancedFilters
 )
 
 type Messages[M] = Map[Int, M]

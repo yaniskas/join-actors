@@ -1,6 +1,7 @@
 package test.utils
 
 import join_actors.api.*
+import join_patterns.matching.multiple_filtering.MultipleFilteringMatcher
 import org.scalatest.prop.TableDrivenPropertyChecks.Table
 
 val matchers = Table(
@@ -16,5 +17,6 @@ val matchers = Table(
   MutableStatefulMatcher,
   StatefulTreeMatcher,
   WhileEagerMatcher,
-  WhileLazyMatcher
+  WhileLazyMatcher,
+  MultipleFilteringMatcher
 )

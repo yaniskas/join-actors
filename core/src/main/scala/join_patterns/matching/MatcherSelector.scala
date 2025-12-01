@@ -1,5 +1,6 @@
 package join_patterns.matching
 
+import join_patterns.matching.multiple_filtering.MultipleFilteringMatcher
 import join_patterns.matching.brute_force.BruteForceMatcher
 import join_patterns.matching.immutable.StatefulTreeMatcher
 import join_patterns.matching.mutable.MutableStatefulMatcher
@@ -28,7 +29,8 @@ object MatcherSelector:
     "lazy-parallel" -> LazyParallelMatcher(numCores),
     "filtering-parallel" -> FilteringParallelMatcher(numCores),
     "array-while" -> ArrayWhileMatcher,
-    "array-parallel" -> ArrayParallelMatcher(numCores)
+    "array-parallel" -> ArrayParallelMatcher(numCores),
+    "advanced-filtering" -> MultipleFilteringMatcher
   )
 
   private val cmdStringToMatcher = cmdStringsAndMatcher.toMap

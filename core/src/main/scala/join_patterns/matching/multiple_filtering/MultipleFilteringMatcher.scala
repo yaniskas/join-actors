@@ -53,4 +53,4 @@ object MultipleFilteringMatcher extends MatcherFactory:
   def apply[M, T]: JoinDefinition[M, T] => Matcher[M, T] =
     (joinDefinition: JoinDefinition[M, T]) => new MultipleFilteringMatcher(joinDefinition)
 
-  override def toString(): String = "AdvancedFilteringMatcher"
+  override def toString: String = "MultipleFilteringMatcher"

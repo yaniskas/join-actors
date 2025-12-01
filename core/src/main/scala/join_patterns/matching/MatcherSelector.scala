@@ -30,7 +30,7 @@ object MatcherSelector:
     "filtering-parallel" -> FilteringParallelMatcher(numCores),
     "array-while" -> ArrayWhileMatcher,
     "array-parallel" -> ArrayParallelMatcher(numCores),
-    "advanced-filtering" -> MultipleFilteringMatcher
+    "multiple-filtering" -> MultipleFilteringMatcher
   )
 
   private val cmdStringToMatcher = cmdStringsAndMatcher.toMap

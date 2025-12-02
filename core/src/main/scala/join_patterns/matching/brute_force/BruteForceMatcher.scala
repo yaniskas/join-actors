@@ -38,7 +38,7 @@ class BruteForceMatcher[M, T](private val patterns: JoinDefinition[M, T]) extend
                       patternBins
                     )
 
-                  val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern)
+                  val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern.guard)
 
                   bestMatchOpt match
                     case Some((bestMatchIdxs, bestMatchSubsts)) =>

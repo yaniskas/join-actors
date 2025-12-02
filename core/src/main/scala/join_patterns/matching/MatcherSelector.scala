@@ -13,6 +13,7 @@ import join_patterns.matching.lazy_parallel.LazyParallelMatcher
 import join_patterns.matching.filtering_parallel.FilteringParallelMatcher
 import join_patterns.matching.array_while.ArrayWhileMatcher
 import join_patterns.matching.array_parallel.ArrayParallelMatcher
+import join_patterns.matching.efficient_filtering.EfficientFilteringMatcher
 
 val numCores = Runtime.getRuntime().availableProcessors()
 
@@ -30,7 +31,8 @@ object MatcherSelector:
     "filtering-parallel" -> FilteringParallelMatcher(numCores),
     "array-while" -> ArrayWhileMatcher,
     "array-parallel" -> ArrayParallelMatcher(numCores),
-    "multiple-filtering" -> MultipleFilteringMatcher
+    "multiple-filtering" -> MultipleFilteringMatcher,
+    "efficient-filtering" -> EfficientFilteringMatcher
   )
 
   private val cmdStringToMatcher = cmdStringsAndMatcher.toMap

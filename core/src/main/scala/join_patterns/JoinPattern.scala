@@ -63,12 +63,12 @@ def ppPatternBins(patternBins: PatternBins): String =
     }
     .mkString(", ")
 
-type GuardFilter = LookupEnv => Boolean
+type GuardLambda = LookupEnv => Boolean
 
 final case class PatternIdxInfo[M](
     msgTypeChecker: M => Boolean,
     lookupEnvExtractor: M => LookupEnv,
-    filterer: GuardFilter
+    filterer: GuardLambda
 )
 
 type PatternExtractors[M] = Map[PatternIdx, PatternIdxInfo[M]]
@@ -84,7 +84,7 @@ def ppPatternExtractors[M, T](patternExtractors: PatternExtractors[M]): String =
     }
     .mkString(", ")
 
-type AdvancedFilters = Map[Set[PatternIdxs], GuardFilter]
+type AdvancedFilters = Map[Set[PatternIdxs], GuardLambda]
 
 final case class PatternInfo[M](
     // Initial pattern bins
@@ -109,10 +109,11 @@ def ppLookupEnv(lookupEnv: LookupEnv): String =
 /** An ADT definition of a join pattern
   */
 case class JoinPattern[M, T](
-    guard: LookupEnv => Boolean,
-    rhs: (LookupEnv, ActorRef[M]) => T,
-    size: Int,
-    getPatternInfo: PatternInfo[M]
+  guard: GuardLambda,
+  nonRedundantGuard: GuardLambda,
+  rhs: (LookupEnv, ActorRef[M]) => T,
+  size: Int,
+  getPatternInfo: PatternInfo[M]
 )
 
 type JoinDefinition[M, T] = List[JoinPattern[M, T]]

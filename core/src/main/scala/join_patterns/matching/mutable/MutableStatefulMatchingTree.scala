@@ -55,7 +55,7 @@ class MutableStatefulMatchingTree[M, T](private val pattern: JoinPattern[M, T], 
       .map: (msgIdxs, patternBins) =>
         val validPermutations =
           getMsgIdxsWithPayloadExtractor(patternExtractors, patternBins)
-        val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern)
+        val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern.guard)
         bestMatchOpt
       .collectFirst { case Some(_bestMatch) => _bestMatch }
 

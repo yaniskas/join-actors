@@ -78,7 +78,7 @@ class WhileLazyMatchingTree[M, T](private val pattern: JoinPattern[M, T], privat
   private def findBestValidPermutation(patternBins: PatternBins, messages: MutableMap[Int, M]): Option[(MessageIdxs, LookupEnv)] =
     val validPermutations =
       getMsgIdxsWithPayloadExtractor(patternExtractors, patternBins)
-    val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern)
+    val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern.guard)
     bestMatchOpt
 
   def pruneTree(messageIdxsToRemove: MessageIdxs): Unit =

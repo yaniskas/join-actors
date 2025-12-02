@@ -195,20 +195,21 @@ private def replaceInnersWithLookupEnv[T](using quotes: Quotes, tt: Type[T])(
 private def generateGuard(using quotes: Quotes)(
     guard: Option[quotes.reflect.Term],
     typesData: List[(quotes.reflect.TypeRepr, List[(String, quotes.reflect.TypeRepr)])]
-): (Expr[GuardFilter], Map[String, Expr[GuardFilter]], Map[List[String], Expr[GuardFilter]]) =
+): (Expr[GuardLambda], Map[String, Expr[GuardLambda]], Map[List[String], Expr[GuardLambda]], Expr[GuardLambda]) =
   import quotes.reflect.*
 
   val inners = typesData.flatMap(_._2)
   val innersForSplice = inners.map((n, t) => (n, t.asType))
 
-  val emptyFilteringLambdas = Map[String, Expr[GuardFilter]]()
-  val emptyAdvancedFilteringLambdas = Map[List[String], Expr[GuardFilter]]()
+  val emptyGuard = '{ (_: LookupEnv) => true }
+  val emptyFilteringLambdas = Map[String, Expr[GuardLambda]]()
+  val emptyAdvancedFilteringLambdas = Map[List[String], Expr[GuardLambda]]()
 
   guard match
-    case None          => ('{ (_: LookupEnv) => true }, emptyFilteringLambdas, emptyAdvancedFilteringLambdas)
+    case None          => (emptyGuard, emptyFilteringLambdas, emptyAdvancedFilteringLambdas, emptyGuard)
     case Some(term: Term) =>
       if inners.isEmpty then
-        ('{ (_: LookupEnv) => ${ term.asExprOf[Boolean] }}, emptyFilteringLambdas, emptyAdvancedFilteringLambdas)
+        ('{ (_: LookupEnv) => ${ term.asExprOf[Boolean] }}, emptyFilteringLambdas, emptyAdvancedFilteringLambdas, '{ (_: LookupEnv) => ${ term.asExprOf[Boolean] }})
       else
         // Simple filtering functionality
 
@@ -254,6 +255,8 @@ private def generateGuard(using quotes: Quotes)(
 
             t -> clauses
 
+//        println(s"Executing macro in ${Position.ofMacroExpansion.sourceFile.name}")
+//        println(s"Executing macro in ${Position.ofMacroExpansion.startLine}")
 //        println(s"Type names and filtering clauses: ${typeNamesAndFilteringClauses.map{ (t, c) => (t, c.map(_.show)) }}")
 
         val typeNamesAndFilterExpressions = typeNamesAndFilteringClauses.map: (t, cs) =>
@@ -299,6 +302,7 @@ private def generateGuard(using quotes: Quotes)(
           (ts, reconstructConjunctionTree(cs))
 
 //        println(s"Executing macro in ${Position.ofMacroExpansion.sourceFile.name}")
+//        println(s"Executing macro in ${Position.ofMacroExpansion.startLine}")
 //        println(s"Type names and advanced filter expressions: ${typeSetsAndAdvancedFilterExpressions.map((t, e) => (t, e.show))}")
 
         val advancedFilteringLambdas = typeSetsAndAdvancedFilterExpressions.iterator
@@ -314,13 +318,16 @@ private def generateGuard(using quotes: Quotes)(
 //        println(s"Type names and filter lambdas: ${filteringLambdas.map((t, e) => (t, e.show))}")
 
 
-//        val filteringClauses = typeNamesAndFilteringClauses.flatMap(_._2)
-//        val finalGuardClauses = clauses.filterNot(filteringClauses.contains(_))
-//        val finalGuardExpression = reconstructConjunctionTree(finalGuardClauses)
+        val allFilteringClauses =
+          typeNamesAndFilteringClauses.flatMap((t, cs) => cs).toList
+            ::: typeSetsAndAdvancedFilteringClauses.flatMap((t, cs) => cs).toList
+        val finalGuardClauses = clauses.filterNot(allFilteringClauses.contains(_))
+        val nonRedundantGuard = reconstructConjunctionTree(finalGuardClauses)
 
         val guardLambda = '{ (lookupEnv: LookupEnv) => ${ replaceInnersWithLookupEnv(term.asExprOf[Boolean], innersForSplice, 'lookupEnv) }}
+        val nonRedundantGuardLambda = '{ (lookupEnv: LookupEnv) => ${ replaceInnersWithLookupEnv(nonRedundantGuard.asExprOf[Boolean], innersForSplice, 'lookupEnv) }}
 
-        (guardLambda, filteringLambdas, advancedFilteringLambdas)
+        (guardLambda, filteringLambdas, advancedFilteringLambdas, nonRedundantGuardLambda)
 
 
 /** Creates the right-hand side function.
@@ -394,9 +401,9 @@ private def generateUnaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T]
 
   val typesData = extractConstructorData(List(dataType))
 
-  val (predicate, filters, advancedFilters) = generateGuard(guard, typesData)
+  val (predicate, filters, advancedFilters, nonRedundantGuard) = generateGuard(guard, typesData)
 
-  val extractors: List[(Expr[M => Boolean], Expr[M => LookupEnv], Expr[GuardFilter])] =
+  val extractors: List[(Expr[M => Boolean], Expr[M => LookupEnv], Expr[GuardLambda])] =
     typesData.map { (outer, inners) =>
       val extractor = generateExtractor(outer, inners.map(_._1))
 
@@ -435,6 +442,7 @@ private def generateUnaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T]
   '{
     JoinPattern(
       $predicate,
+      $nonRedundantGuard,
       $rhs,
       ${ Expr(size) },
       ${ patternInfo }
@@ -465,10 +473,10 @@ private def generateNaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T])
 
   val typesData = extractConstructorData(dataType)
 
-  val (predicate, filters, advancedFilters) =
+  val (predicate, filters, advancedFilters, nonRedundantGuard) =
     generateGuard(guard, typesData)
 
-  val extractors: List[(Expr[String], Expr[M => Boolean], Expr[M => LookupEnv], Expr[GuardFilter])] =
+  val extractors: List[(Expr[String], Expr[M => Boolean], Expr[M => LookupEnv], Expr[GuardLambda])] =
     typesData.map { (outer, inners) =>
       val extractor = generateExtractor(outer, inners.map(_._1))
 
@@ -533,6 +541,7 @@ private def generateNaryJP[M, T](using quotes: Quotes, tm: Type[M], tt: Type[T])
   '{
     JoinPattern(
       $predicate,
+      $nonRedundantGuard,
       $rhs,
       ${ Expr(size) },
       ${ patternInfo }

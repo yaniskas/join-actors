@@ -88,13 +88,13 @@ private def computeSubsts[M](
 def findFairestMatch[M, T](
                             validPermutations: Iterator[List[(Int, M => LookupEnv)]],
                             messages: MutMap[Int, M],
-                            pattern: JoinPattern[M, T]
+                            guard: GuardLambda
                           ): Option[(MessageIdxs, LookupEnv)] =
   var bestMatchSubsts: LookupEnv = null
   var bestMatchIdxs: MessageIdxs = null
   validPermutations.find { possibleFit =>
     bestMatchSubsts = computeSubsts(messages, possibleFit)
-    if pattern.guard(bestMatchSubsts) then
+    if guard(bestMatchSubsts) then
       bestMatchIdxs = MessageIdxs(possibleFit.map(_._1)*)
       true
     else false

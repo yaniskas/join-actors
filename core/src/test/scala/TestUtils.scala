@@ -2,6 +2,7 @@ package test.utils
 
 import join_actors.api.*
 import join_patterns.matching.double_lazy_filtering.DoubleLazyFilteringMatcher
+import join_patterns.matching.eager_removal_filtering.EagerRemovalFilteringMatcher
 import join_patterns.matching.efficient_filtering.EfficientFilteringMatcher
 import join_patterns.matching.multiple_filtering.MultipleFilteringMatcher
 import org.scalatest.prop.TableDrivenPropertyChecks.Table
@@ -22,5 +23,6 @@ val matchers = Table(
   WhileLazyMatcher,
   MultipleFilteringMatcher,
   EfficientFilteringMatcher,
-  DoubleLazyFilteringMatcher
+  DoubleLazyFilteringMatcher,
+  EagerRemovalFilteringMatcher
 )

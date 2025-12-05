@@ -145,7 +145,7 @@ class EagerRemovalFilteringMatchingTree[M, T](private val pattern: JoinPattern[M
   private def findBestValidPermutation(patternBins: PatternBins, messages: MutableMap[Int, M]): Option[(MessageIdxs, LookupEnv)] =
     val validPermutations =
       getMsgIdxsWithPayloadExtractor(patternExtractors, patternBins)
-    val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern.guard)
+    val bestMatchOpt = findFairestMatch(validPermutations, messages, pattern.nonRedundantGuard)
     bestMatchOpt
 
   def pruneTree(messageIdxsToRemove: MessageIdxs): Unit =
